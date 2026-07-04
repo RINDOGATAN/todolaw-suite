@@ -35,6 +35,15 @@ starts everything, and finishes with a box telling you the three addresses.
 The first run downloads and builds quite a lot — expect 15–30 minutes and a
 warm laptop. Every run after that takes seconds.
 
+**4. Bookmark your portal.**
+The script also writes a small web page, `portal/index.html`, inside the
+kit's folder — open it in your browser (double-click it) and bookmark it.
+It shows the three tools as cards: a button to open each one, whether it is
+running, which version you have, whether an update is available, and when
+the last backup was made. It is refreshed every time you run `./suite.sh`
+(any command), so what it shows is always the current truth. To put your
+firm's name on top: `BRAND_NAME="Your Firm" ./suite.sh portal`
+
 ## What you get
 
 | Product | What it does | Address |
@@ -63,6 +72,7 @@ Open Terminal in the kit's folder and type:
 | Stop everything (data is kept) | `./suite.sh stop` |
 | Make an encrypted backup | `./suite.sh backup` |
 | Update to the latest version | `./suite.sh backup && ./suite.sh update` |
+| Refresh the portal page | `./suite.sh portal` |
 
 ## Updating safely
 

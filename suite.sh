@@ -7,6 +7,11 @@
 #   ./suite.sh update     update each app safely (pull + migrate + rebuild)
 #   ./suite.sh backup     make an encrypted backup of each app's data
 #   ./suite.sh status     show what is running
+#   ./suite.sh portal     (re)generate portal/index.html — your bookmark page
+#
+# The portal page is regenerated at the end of every command, so what it
+# shows (running/stopped, versions, updates, last backup) stays honest.
+# Set BRAND_NAME to put the firm's own name on it:  BRAND_NAME="North End Law" ./suite.sh portal
 #
 # What it orchestrates (it never duplicates the apps' own deploy bundles —
 # each app ships its own verified deploy/sovereign/ directory and this
@@ -59,6 +64,14 @@ app_blurb() {
 }
 
 bundle_dir() { echo "$HERE/apps/$1/deploy/sovereign"; }
+
+project_name() {  # the docker compose project name fixed in each bundle
+  case "$1" in
+    dpocentral) echo "dpocentral-sovereign" ;;
+    deal-room)  echo "dealroom-sovereign" ;;
+    aisentinel) echo "aisentinel-sovereign" ;;
+  esac
+}
 
 # --- pretty printing (no secrets are ever printed) --------------------------
 if [ -t 1 ]; then
@@ -136,6 +149,23 @@ ensure_env() {
     note "$(app_title "$app"): settings already exist — keeping them."
     return 0
   fi
+  # No settings file — but is there data from a PREVIOUS installation on this
+  # computer? New random passwords would not open that old database, so stop
+  # with a clear choice instead of failing halfway through a long build.
+  project=$(project_name "$app")
+  if docker volume inspect "${project}_db-data" >/dev/null 2>&1; then
+    oldvols=$(docker volume ls -q | grep "^${project}_" | tr '\n' ' ')
+    die "Found data from a previous $(app_title "$app") installation, but not its settings file." \
+        "A settings file (.env) holds the password to that data; without it the old data cannot be opened." \
+        "" \
+        "Either: put the old settings file back at" \
+        "    $envfile" \
+        "and run  ./suite.sh  again," \
+        "" \
+        "or, if that old data does NOT matter (e.g. it was only a test), remove it:" \
+        "    docker volume rm $oldvols" \
+        "and run  ./suite.sh  again to start fresh."
+  fi
   port=$(app_port "$app")
   # Random secrets, generated locally, stored only in the .env file.
   pw=$(openssl rand -hex 24)          || die "openssl failed to generate a password."
@@ -196,6 +226,170 @@ running_containers() {  # container IDs for one app's stack (empty if down)
   compose "$1" ps -q 2>/dev/null
 }
 
+# --- the portal page ---------------------------------------------------------
+# A single self-contained HTML file (portal/index.html) the firm can bookmark:
+# each product as a card with its link, running state, version, update status
+# and last backup. No server, no external assets — opens straight from disk.
+# Regenerated at the end of every suite.sh command so it never lies.
+gen_portal() {
+  mkdir -p portal
+  out="$HERE/portal/index.html"
+  brand="${BRAND_NAME:-todo.law suite}"
+  brand=$(printf '%s' "$brand" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+  gen_at=$(date '+%A %d %B %Y, %H:%M')
+
+  docker_up=no
+  docker info >/dev/null 2>&1 && docker_up=yes
+
+  cat >"$out" <<EOF
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$brand — local portal</title>
+<style>
+  :root { --ink:#1c2733; --mut:#5c6b7a; --line:#e3e8ee; --bg:#f4f6f8;
+          --card:#ffffff; --accent:#2f6f8f; --ok:#1e7d45; --off:#8a97a5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font:16px/1.55 -apple-system, "Segoe UI", system-ui, sans-serif;
+         color:var(--ink); background:var(--bg); padding:2.5rem 1.25rem 4rem; }
+  main { max-width:60rem; margin:0 auto; }
+  header h1 { font-size:1.7rem; letter-spacing:-.01em; }
+  header p  { color:var(--mut); margin-top:.35rem; font-size:.95rem; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));
+           gap:1rem; margin-top:1.75rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:.75rem;
+          padding:1.25rem 1.25rem 1.1rem; display:flex; flex-direction:column; gap:.6rem; }
+  .card h2 { font-size:1.15rem; }
+  .card .desc { color:var(--mut); font-size:.92rem; min-height:2.8em; }
+  .state { display:inline-flex; align-items:center; gap:.45rem; font-size:.85rem;
+           font-weight:600; }
+  .dot { width:.6rem; height:.6rem; border-radius:50%; display:inline-block; }
+  .running  .dot { background:var(--ok); }  .running  { color:var(--ok); }
+  .stopped  .dot { background:var(--off); } .stopped  { color:var(--off); }
+  .open { display:inline-block; text-align:center; background:var(--accent); color:#fff;
+          text-decoration:none; border-radius:.5rem; padding:.5rem .9rem;
+          font-weight:600; font-size:.95rem; }
+  .open.dim { background:var(--off); }
+  .meta { border-top:1px solid var(--line); padding-top:.6rem; margin-top:.2rem;
+          font-size:.82rem; color:var(--mut); display:grid; gap:.15rem; }
+  .meta strong { color:var(--ink); font-weight:600; }
+  .upd-yes { color:#9a6700; font-weight:600; }
+  footer { margin-top:2.5rem; color:var(--mut); font-size:.85rem; }
+  footer code { background:#e9edf1; border-radius:.3rem; padding:.1rem .4rem;
+                font-size:.85em; color:var(--ink); }
+  footer li { margin:.2rem 0 .2rem 1.2rem; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>$brand</h1>
+  <p>Your legal tools, running on this computer. Snapshot taken $gen_at —
+     refresh it any time with <code>./suite.sh portal</code>.</p>
+</header>
+<div class="cards">
+EOF
+
+  for app in $APPS; do
+    title=$(app_title "$app")
+    port=$(app_port "$app")
+    blurb=$(app_blurb "$app")
+    url="http://localhost:$port"
+
+    if [ ! -d "apps/$app/.git" ]; then
+      cat >>"$out" <<EOF
+<section class="card">
+  <h2>$title</h2>
+  <p class="desc">$blurb</p>
+  <span class="state stopped"><span class="dot"></span>NOT INSTALLED</span>
+  <span class="open dim">Install with ./suite.sh</span>
+  <div class="meta"><span>Run <strong>./suite.sh</strong> in the kit folder to install.</span></div>
+</section>
+EOF
+      continue
+    fi
+
+    # running / stopped (docker at generation time)
+    state_cls=stopped; state_txt=STOPPED
+    if [ "$docker_up" = "yes" ] && [ -n "$(running_containers "$app")" ]; then
+      state_cls=running; state_txt=RUNNING
+    fi
+
+    # current version: short SHA + commit date
+    ver=$(git -C "apps/$app" log -1 --format='%h, %ad' --date=format:'%d %b %Y' 2>/dev/null)
+    [ -n "$ver" ] || ver="unknown"
+
+    # updates available? (needs internet; degrades gracefully)
+    if git -C "apps/$app" fetch --quiet origin 2>/dev/null; then
+      behind=$(git -C "apps/$app" rev-list --count 'HEAD..@{u}' 2>/dev/null)
+      case "$behind" in
+        0)  upd='<span>Software: <strong>up to date</strong></span>' ;;
+        "") upd='<span>Software: could not compare versions</span>' ;;
+        *)  upd="<span class=\"upd-yes\">Software: $behind update(s) available — run ./suite.sh update</span>" ;;
+      esac
+    else
+      upd='<span>Software: could not check for updates (offline?)</span>'
+    fi
+
+    # last backup: newest file in the bundle's backups/ dir
+    bdir="$(bundle_dir "$app")/backups"
+    newest=""
+    [ -d "$bdir" ] && newest=$(ls -1t "$bdir" 2>/dev/null | head -1)
+    if [ -n "$newest" ]; then
+      stamp=$(printf '%s' "$newest" | sed -n 's/.*-\([0-9]\{8\}\)-\([0-9]\{6\}\).*/\1\2/p')
+      if [ -n "$stamp" ]; then
+        bkp="<strong>${stamp:6:2}.${stamp:4:2}.${stamp:0:4} at ${stamp:8:2}:${stamp:10:2}</strong>"
+      else
+        bkp="<strong>$newest</strong>"
+      fi
+      bkp="<span>Last backup: $bkp</span>"
+    else
+      bkp='<span>Last backup: <strong>none yet</strong> — run ./suite.sh backup</span>'
+    fi
+
+    if [ "$state_cls" = "running" ]; then
+      openbtn="<a class=\"open\" href=\"$url\">Open $title</a>"
+    else
+      openbtn="<span class=\"open dim\">Stopped — start with ./suite.sh</span>"
+    fi
+
+    cat >>"$out" <<EOF
+<section class="card">
+  <h2>$title</h2>
+  <p class="desc">$blurb</p>
+  <span class="state $state_cls"><span class="dot"></span>$state_txt</span>
+  $openbtn
+  <div class="meta">
+    <span>Address: <strong>$url</strong></span>
+    <span>Version: <strong>$ver</strong></span>
+    $upd
+    $bkp
+  </div>
+</section>
+EOF
+  done
+
+  cat >>"$out" <<'EOF'
+</div>
+<footer>
+  <p>Everything on this page runs and stays on this computer — no cloud.
+     Everyday commands (in the kit folder, in Terminal):</p>
+  <ul>
+    <li><code>./suite.sh</code> — start everything (or install)</li>
+    <li><code>./suite.sh stop</code> — stop everything (data is kept)</li>
+    <li><code>./suite.sh backup</code> — encrypted backup</li>
+    <li><code>./suite.sh backup && ./suite.sh update</code> — update safely</li>
+    <li><code>./suite.sh portal</code> — refresh this page</li>
+  </ul>
+</footer>
+</main>
+</body>
+</html>
+EOF
+}
+
 # --- commands ----------------------------------------------------------------
 cmd_up() {
   START=$SECONDS
@@ -235,7 +429,7 @@ cmd_up() {
   say "  |   Dealroom      http://localhost:8486   deal negotiation             |"
   say "  |   AI Sentinel   http://localhost:8487   AI governance                |"
   say "  |                                                                      |"
-  say "  |   Sign in on each with your email address (first sign-in creates    |"
+  say "  |   Sign in on each with your email address (first sign-in creates     |"
   say "  |   your account — local only, no password, no cloud).                 |"
   say "  |                                                                      |"
   say "  |   Your data lives in Docker volumes on THIS computer only.           |"
@@ -248,6 +442,10 @@ cmd_up() {
   say "  |   What is running:      ./suite.sh status                            |"
   say "  |                                                                      |"
   say "  +----------------------------------------------------------------------+"
+  say ""
+  gen_portal
+  say "  ${BOLD}Your portal page:${RESET} portal/index.html — open it in your browser"
+  say "  and bookmark it (it lists the three tools with their current state)."
   say ""
   say "  ${DIM}Done in ${MIN}m ${SEC}s.${RESET}"
   say ""
@@ -268,6 +466,7 @@ cmd_stop() {
       warn "$title: could not stop cleanly — see logs/$app.log"
     fi
   done
+  gen_portal
   say ""
 }
 
@@ -301,6 +500,7 @@ cmd_update() {
       warn "restart failed — see logs/$app.log"
     fi
   done
+  gen_portal
   say ""
 }
 
@@ -330,6 +530,7 @@ cmd_backup() {
   say ""
   say "${DIM}Backups are encrypted with the BACKUP_PASSPHRASE in each app's .env —"
   say "keep a copy of those files somewhere safe (password manager).${RESET}"
+  gen_portal
   say ""
 }
 
@@ -356,6 +557,17 @@ cmd_status() {
       printf '  %-14s %-26s %s\n' "$title" "http://localhost:$port" "${YELLOW}starting (HTTP $code)${RESET}"
     fi
   done
+  gen_portal
+  note "portal/index.html refreshed — that page always shows this same picture."
+  say ""
+}
+
+cmd_portal() {
+  gen_portal
+  say ""
+  ok "Portal page written to  portal/index.html"
+  note "Open it in your browser and bookmark it. Refresh any time: ./suite.sh portal"
+  note "Put your firm's name on it:  BRAND_NAME=\"Your Firm\" ./suite.sh portal"
   say ""
 }
 
@@ -366,6 +578,7 @@ usage() {
   say "  ./suite.sh update     pull latest code, migrate, rebuild (per app)"
   say "  ./suite.sh backup     encrypted backup of each app's data"
   say "  ./suite.sh status     show what is running"
+  say "  ./suite.sh portal     regenerate portal/index.html (your bookmark page)"
 }
 
 case "${1:-up}" in
@@ -374,6 +587,7 @@ case "${1:-up}" in
   update)  cmd_update ;;
   backup)  cmd_backup ;;
   status)  cmd_status ;;
+  portal)  cmd_portal ;;
   -h|--help|help) usage ;;
   *) say "Unknown command: $1"; say ""; usage; exit 1 ;;
 esac

@@ -1,0 +1,56 @@
+
+todo.law suite — setting up on this computer.
+Everything runs and stays locally. Nothing is sent to any cloud.
+
+  [ok] Docker is installed and running.
+
+[1/3] DPO Central — privacy-program management (GDPR records, DPIAs...)
+  DPO Central: code is up to date.
+  DPO Central: settings already exist — keeping them.
+  Building and starting DPO Central (the first time takes several minutes — coffee time)...
+  Waiting for DPO Central to answer...
+  [ok] DPO Central is ready:  http://localhost:8485
+
+[2/3] Dealroom — deal and contract negotiation rooms
+  Dealroom: code is up to date.
+  Dealroom: settings already exist — keeping them.
+  Building and starting Dealroom (the first time takes several minutes — coffee time)...
+  Waiting for Dealroom to answer...
+  [ok] Dealroom is ready:  http://localhost:8486
+
+[3/3] AI Sentinel — AI-governance register and assessments
+  AI Sentinel: code is up to date.
+  AI Sentinel: settings already exist — keeping them.
+  Building and starting AI Sentinel (the first time takes several minutes — coffee time)...
+  Waiting for AI Sentinel to answer...
+  [ok] AI Sentinel is ready:  http://localhost:8487
+
+  +----------------------------------------------------------------------+
+  |                                                                      |
+  |   The todo.law suite is running on this computer.                    |
+  |                                                                      |
+  |   DPO Central   http://localhost:8485   privacy management           |
+  |   Dealroom      http://localhost:8486   deal negotiation             |
+  |   AI Sentinel   http://localhost:8487   AI governance                |
+  |                                                                      |
+  |   Sign in on each with your email address (first sign-in creates    |
+  |   your account — local only, no password, no cloud).                 |
+  |                                                                      |
+  |   Your data lives in Docker volumes on THIS computer only.           |
+  |   Your settings live in apps/*/deploy/sovereign/.env                 |
+  |                                                                      |
+  |   Stop everything:      ./suite.sh stop                              |
+  |   Start again:          ./suite.sh                                   |
+  |   Update (backup 1st):  ./suite.sh backup && ./suite.sh update       |
+  |   Encrypted backup:     ./suite.sh backup                            |
+  |   What is running:      ./suite.sh status                            |
+  |                                                                      |
+  +----------------------------------------------------------------------+
+
+  Your portal page: portal/index.html — open it in your browser
+  and bookmark it (it lists the three tools with their current state).
+
+  Done in 1m 19s.
+
+./suite.sh  2.14s user 2.48s system 5% cpu 1:22.63 total
+SUITE_EXIT=0
