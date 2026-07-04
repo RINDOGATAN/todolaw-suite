@@ -12,6 +12,7 @@
 # The portal page is regenerated at the end of every command, so what it
 # shows (running/stopped, versions, updates, last backup) stays honest.
 # Set BRAND_NAME to put the firm's own name on it:  BRAND_NAME="North End Law" ./suite.sh portal
+# (Once set, it is remembered in .suite-config and used on every later run.)
 #
 # What it orchestrates (it never duplicates the apps' own deploy bundles —
 # each app ships its own verified deploy/sovereign/ directory and this
@@ -32,6 +33,18 @@ set -o pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 cd "$HERE" || exit 1
 mkdir -p apps logs
+
+# --- remembered settings (.suite-config) -------------------------------------
+# If BRAND_NAME is given on any command, remember it in .suite-config so the
+# portal keeps the firm's name on every later run too (no need to retype it).
+if [ -n "${BRAND_NAME:-}" ]; then
+  # Store it single-quoted, with any embedded quotes escaped, so odd firm
+  # names (O'Brien & Partners) survive the round trip.
+  esc=$(printf '%s' "$BRAND_NAME" | sed "s/'/'\\\\''/g")
+  printf "# Remembered by suite.sh — edit or delete freely.\nBRAND_NAME='%s'\n" "$esc" >"$HERE/.suite-config"
+elif [ -f "$HERE/.suite-config" ]; then
+  . "$HERE/.suite-config"
+fi
 
 GITHUB_ORG="https://github.com/RINDOGATAN"
 DOCKER_LINK="https://www.docker.com/products/docker-desktop/"
@@ -432,6 +445,12 @@ cmd_up() {
   say "  |   Sign in on each with your email address (first sign-in creates     |"
   say "  |   your account — local only, no password, no cloud).                 |"
   say "  |                                                                      |"
+  say "  |   IMPORTANT — about that sign-in: it accepts ANY email address.      |"
+  say "  |   That is safe ONLY because everything binds to this computer        |"
+  say "  |   (localhost); nobody else can reach these pages. Before EVER        |"
+  say "  |   opening the ports to the network, read the Hardening section       |"
+  say "  |   in each app's  apps/<app>/deploy/sovereign/README.md.              |"
+  say "  |                                                                      |"
   say "  |   Your data lives in Docker volumes on THIS computer only.           |"
   say "  |   Your settings live in apps/*/deploy/sovereign/.env                 |"
   say "  |                                                                      |"
@@ -568,6 +587,7 @@ cmd_portal() {
   ok "Portal page written to  portal/index.html"
   note "Open it in your browser and bookmark it. Refresh any time: ./suite.sh portal"
   note "Put your firm's name on it:  BRAND_NAME=\"Your Firm\" ./suite.sh portal"
+  note "(the name is then remembered in .suite-config for every later run)"
   say ""
 }
 

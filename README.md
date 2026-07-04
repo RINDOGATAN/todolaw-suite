@@ -15,6 +15,12 @@ think of it as the engine; you never have to look at it after installing.
 Download it here, install it like any other app, and open it once:
 <https://www.docker.com/products/docker-desktop/>
 
+Two things worth knowing before you install: Docker likes room — make sure
+the computer has roughly **20–30 GB of free disk space**. And Docker Desktop
+is **free below Docker's company-size threshold** (currently fewer than 250
+employees *and* under US $10 m annual revenue — almost every law firm
+qualifies); larger organisations need a paid Docker subscription.
+
 **2. Download this kit.**
 On this page on GitHub, click the green **Code** button → **Download ZIP**,
 and unzip it somewhere sensible (e.g. your Documents folder). Or, if you are
@@ -29,6 +35,14 @@ location for you), press Enter, then type:
 ./suite.sh
 ```
 
+If you see **"permission denied"**, type `bash suite.sh` instead — this
+happens when the kit came as a ZIP download (unzipping loses the file's
+"may run" marker) and is completely harmless.
+
+On a brand-new Mac, the first run may pop up a window offering to install
+the **"command line developer tools"** — that is normal: click **Install**,
+wait for it to finish, then run the command again.
+
 That is all. The script checks Docker, downloads the three apps, creates all
 passwords and keys automatically (they stay on your machine), builds and
 starts everything, and finishes with a box telling you the three addresses.
@@ -42,7 +56,9 @@ It shows the three tools as cards: a button to open each one, whether it is
 running, which version you have, whether an update is available, and when
 the last backup was made. It is refreshed every time you run `./suite.sh`
 (any command), so what it shows is always the current truth. To put your
-firm's name on top: `BRAND_NAME="Your Firm" ./suite.sh portal`
+firm's name on top: `BRAND_NAME="Your Firm" ./suite.sh portal` — the name is
+remembered from then on (in a small `.suite-config` file in the kit's
+folder), so every later refresh keeps it.
 
 ## What you get
 
@@ -53,8 +69,15 @@ firm's name on top: `BRAND_NAME="Your Firm" ./suite.sh portal`
 | **AI Sentinel** | A register and assessment tool for the AI systems your organisation uses. | <http://localhost:8487> |
 
 Sign in on each with your email address — the first sign-in creates your
-account, locally, with no password and no email being sent anywhere. (That is
-safe precisely because these pages are only reachable from this computer.)
+account, locally, with no password and no email being sent anywhere.
+
+> **⚠ Read this before ever opening a port.**
+> Sign-in accepts **any email address, with no password**. That is safe
+> **only** because the suite answers to this computer alone (localhost) —
+> nobody else can reach these pages. If you ever expose the apps to the
+> office network or beyond, that trusting sign-in becomes an open door:
+> follow the **"Hardening"** section in each app's
+> `apps/<app>/deploy/sovereign/README.md` *first*.
 
 **All data stays on this computer**, in Docker's storage. Nothing is sent to
 any cloud. Your settings and secret keys live in

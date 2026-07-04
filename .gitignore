@@ -1,4 +1,5 @@
 apps/
 logs/
 portal/
+.suite-config
 run-transcript.txt
