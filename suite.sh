@@ -142,6 +142,8 @@ ensure_repo() {
     else
       warn "$(app_title "$app"): could not check for updates (offline?). Using the copy already on this computer."
     fi
+  elif [ -d "apps/$app" ]; then
+    note "$(app_title "$app"): using the bundled copy included in this kit."
   else
     say "  Downloading $(app_title "$app")..."
     if ! git clone "$GITHUB_ORG/$app.git" "apps/$app" >>"logs/$app.log" 2>&1; then
@@ -311,7 +313,7 @@ EOF
     blurb=$(app_blurb "$app")
     url="http://localhost:$port"
 
-    if [ ! -d "apps/$app/.git" ]; then
+    if [ ! -d "apps/$app" ]; then
       cat >>"$out" <<EOF
 <section class="card">
   <h2>$title</h2>
@@ -498,8 +500,12 @@ cmd_update() {
     title=$(app_title "$app")
     say ""
     say "${BOLD}$title${RESET}"
-    if [ ! -d "apps/$app/.git" ]; then
+    if [ ! -d "apps/$app" ]; then
       note "not installed here — skipping."
+      continue
+    fi
+    if [ ! -d "apps/$app/.git" ]; then
+      note "bundled copy — update by downloading the latest kit from GitHub."
       continue
     fi
     if ! git -C "apps/$app" pull --ff-only >>"logs/$app.log" 2>&1; then

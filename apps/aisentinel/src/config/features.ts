@@ -1,0 +1,63 @@
+export interface FeatureFlags {
+  stripeEnabled: boolean;
+  selfServiceUpgrade: boolean;
+  googleAuthEnabled: boolean;
+  emailAuthEnabled: boolean;
+  devAuthEnabled: boolean;
+  conformityEnabled: boolean;
+  biasFairnessEnabled: boolean;
+  shadowAiEnabled: boolean;
+  vendorCatalogEnabled: boolean;
+  expertDirectoryEnabled: boolean;
+}
+
+const defaultFeatures: FeatureFlags = {
+  stripeEnabled: true,
+  selfServiceUpgrade: true,
+  googleAuthEnabled: true,
+  emailAuthEnabled: true,
+  // Local (passwordless credentials) login: dev mode, or sovereign/self-hosted
+  // builds with NEXT_PUBLIC_LOCAL_AUTH_ENABLED=true (behind the firm's own
+  // network — see deploy/sovereign/README.md).
+  devAuthEnabled:
+    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_LOCAL_AUTH_ENABLED === "true",
+  conformityEnabled: true,
+  biasFairnessEnabled: true,
+  shadowAiEnabled: true,
+  vendorCatalogEnabled: true,
+  expertDirectoryEnabled: true,
+};
+
+export function getFeatureFlags(): FeatureFlags {
+  return {
+    // Default ON (cloud posture); NEXT_PUBLIC_STRIPE_ENABLED=false turns the
+    // billing/self-service surface off for sovereign/self-hosted deployments.
+    stripeEnabled:
+      process.env.NEXT_PUBLIC_STRIPE_ENABLED !== "false" && defaultFeatures.stripeEnabled,
+    selfServiceUpgrade:
+      process.env.NEXT_PUBLIC_SELF_SERVICE_UPGRADE !== "false" &&
+      process.env.NEXT_PUBLIC_STRIPE_ENABLED !== "false" &&
+      defaultFeatures.selfServiceUpgrade,
+    googleAuthEnabled:
+      process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED !== "false" && defaultFeatures.googleAuthEnabled,
+    emailAuthEnabled:
+      process.env.NEXT_PUBLIC_EMAIL_AUTH_ENABLED !== "false" && defaultFeatures.emailAuthEnabled,
+    devAuthEnabled: defaultFeatures.devAuthEnabled,
+    conformityEnabled: defaultFeatures.conformityEnabled,
+    biasFairnessEnabled: defaultFeatures.biasFairnessEnabled,
+    shadowAiEnabled: defaultFeatures.shadowAiEnabled,
+    vendorCatalogEnabled: defaultFeatures.vendorCatalogEnabled,
+    expertDirectoryEnabled:
+      process.env.NEXT_PUBLIC_EXPERT_DIRECTORY_ENABLED !== "false" &&
+      defaultFeatures.expertDirectoryEnabled,
+  };
+}
+
+export const features = getFeatureFlags();
+
+export function isFeatureEnabled(
+  feature: keyof FeatureFlags
+): boolean {
+  return features[feature] as boolean;
+}

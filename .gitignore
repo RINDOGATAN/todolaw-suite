@@ -1,5 +1,14 @@
-apps/
+# The three apps are BAKED into this kit (their clean source trees are
+# committed under apps/). Only per-install runtime artifacts are ignored:
+apps/*/node_modules/
+apps/*/.next/
+apps/*/.vercel/
+apps/**/.env
+apps/**/.env.local
+apps/**/.env.production
+apps/*/logs/
 logs/
 portal/
 .suite-config
 run-transcript.txt
+run-transcript2.txt
