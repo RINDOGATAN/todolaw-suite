@@ -1,0 +1,142 @@
+# todo.law suite — single-command install from prebuilt images.
+#
+# Unlike suite.sh (which git-clones each app and BUILDS it from source), this
+# pulls pinned, prebuilt images from GHCR. One file, one network, one command:
+#
+#   cp .env.example .env      # set the passwords + a bridge key
+#   docker compose up -d
+#
+# The three apps share a network, so DPO Central reaches AI Sentinel by service
+# name (no host.docker.internal) — the cross-app "one system, both regimes" view
+# works out of the box. Data lives in named volumes and survives restarts and
+# version bumps. To upgrade: bump TODOLAW_VERSION in .env, then `up -d`.
+
+name: todolaw-suite
+
+x-restart: &restart unless-stopped
+
+services:
+  # ------------------------------------------------------------------ databases
+  dpo-db:
+    image: postgres:16-alpine
+    restart: *restart
+    environment:
+      POSTGRES_USER: dpocentral
+      POSTGRES_PASSWORD: ${DPO_DB_PASSWORD:?set in .env}
+      POSTGRES_DB: dpocentral
+    volumes: ["dpo-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dpocentral"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  deal-db:
+    image: postgres:16-alpine
+    restart: *restart
+    environment:
+      POSTGRES_USER: dealroom
+      POSTGRES_PASSWORD: ${DEAL_DB_PASSWORD:?set in .env}
+      POSTGRES_DB: dealroom
+    volumes: ["deal-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dealroom"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ais-db:
+    image: postgres:16-alpine
+    restart: *restart
+    environment:
+      POSTGRES_USER: aisentinel
+      POSTGRES_PASSWORD: ${AIS_DB_PASSWORD:?set in .env}
+      POSTGRES_DB: aisentinel
+    volumes: ["ais-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aisentinel"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ------------------------------------------------------- migrators (one-shot)
+  # Apply the migrations history + first-boot seed, then exit. Safe to re-run.
+  dpo-migrator:
+    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-latest}
+    restart: "no"
+    working_dir: /app
+    entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
+    depends_on:
+      dpo-db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
+
+  deal-migrator:
+    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-latest}
+    restart: "no"
+    working_dir: /app
+    entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
+    depends_on:
+      deal-db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
+
+  ais-migrator:
+    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-latest}
+    restart: "no"
+    working_dir: /app
+    entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
+    depends_on:
+      ais-db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
+
+  # ------------------------------------------------------------------- the apps
+  dpocentral:
+    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-latest}
+    restart: *restart
+    ports: ["127.0.0.1:8485:3001"]
+    depends_on:
+      dpo-db: { condition: service_healthy }
+      dpo-migrator: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
+      NEXTAUTH_URL: http://localhost:8485
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      # Cross-app bridge to AI Sentinel — server-to-server over the shared network
+      # (service name, not host.docker.internal). The browser deep-link URL is
+      # baked into the image (localhost:8487). Leave BRIDGE_API_KEY empty to keep
+      # the integration off; set it (same on both apps) to turn it on.
+      AI_SENTINEL_API_URL: http://aisentinel:3003
+      AI_SENTINEL_API_KEY: ${BRIDGE_API_KEY:-}
+
+  dealroom:
+    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-latest}
+    restart: *restart
+    ports: ["127.0.0.1:8486:3000"]
+    depends_on:
+      deal-db: { condition: service_healthy }
+      deal-migrator: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
+      NEXTAUTH_URL: http://localhost:8486
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+
+  aisentinel:
+    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-latest}
+    restart: *restart
+    ports: ["127.0.0.1:8487:3003"]
+    depends_on:
+      ais-db: { condition: service_healthy }
+      ais-migrator: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
+      NEXTAUTH_URL: http://localhost:8487
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      # Receiver side of the DPO Central bridge: authorize DPO's key.
+      VW_IMPORT_API_KEYS: ${BRIDGE_API_KEY:-}
+
+volumes:
+  dpo-data:
+  deal-data:
+  ais-data:
