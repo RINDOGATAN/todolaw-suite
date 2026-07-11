@@ -80,6 +80,8 @@ services:
       deal-db: { condition: service_healthy }
     environment:
       DATABASE_URL: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
+      # Dealroom's schema uses a separate directUrl for migrations (Neon pattern).
+      DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
 
   ais-migrator:
     image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-latest}
@@ -89,6 +91,8 @@ services:
     depends_on:
       ais-db: { condition: service_healthy }
     environment:
+      # AI Sentinel's Prisma schema reads a prefixed var name (ais_DATABASE_URL).
+      ais_DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
 
   # ------------------------------------------------------------------- the apps
@@ -119,6 +123,7 @@ services:
       deal-migrator: { condition: service_completed_successfully }
     environment:
       DATABASE_URL: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
+      DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       NEXTAUTH_URL: http://localhost:8486
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
 
@@ -130,6 +135,7 @@ services:
       ais-db: { condition: service_healthy }
       ais-migrator: { condition: service_completed_successfully }
     environment:
+      ais_DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       NEXTAUTH_URL: http://localhost:8487
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
