@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 Rindogatan LLC
+
 /**
  * Cryptographic utilities for skill package verification and licensing.
  *
@@ -24,7 +27,7 @@ const logger = createLogger("crypto");
 const PUBLIC_KEY_PEM =
   process.env.SKILL_SIGNING_PUBLIC_KEY ||
   `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEAPlaceholder_Replace_With_Real_Key_In_Production==
+MCowBQYDK2VwAyEA7VIhH/9tFV23rRAWcQiGalDtND9AkWCJrdKxBfxF3dU=
 -----END PUBLIC KEY-----`;
 
 /**

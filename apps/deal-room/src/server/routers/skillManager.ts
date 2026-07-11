@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025-2026 Rindogatan LLC
+
 /**
  * Skill Manager Router
  *
@@ -273,7 +276,7 @@ export const skillManagerRouter = createTRPCRouter({
 
       const result = await activateOffline(
         input.licenseFile as LicenseFile,
-        customer.id
+        { id: customer.id, email: customer.email }
       );
 
       if (!result.success) {
