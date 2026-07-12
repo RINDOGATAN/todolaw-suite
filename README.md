@@ -1,7 +1,7 @@
 # The todo.law suite, on your own computer
 
-Three legal-practice tools — **DPO Central**, **Dealroom** and **AI Sentinel**
-— running entirely on one computer in your office. No cloud account, no
+Three legal-practice tools: **DPO Central**, **Dealroom** and **AI Sentinel**,
+running entirely on one computer in your office. No cloud account, no
 subscription, no data leaving the building.
 
 This kit is for a lawyer or office manager, not an engineer. If you can
@@ -11,15 +11,15 @@ nothing to build: the kit downloads three ready-made apps and starts them.
 ## Three steps
 
 **1. Install Docker Desktop** (once).
-Docker is a free program that runs the suite quietly in the background —
-think of it as the engine; you never have to look at it after installing.
+Docker is a free program that runs the suite quietly in the background.
+Think of it as the engine; you never have to look at it after installing.
 Download it here, install it like any other app, and open it once:
 <https://www.docker.com/products/docker-desktop/>
 
-Two things worth knowing: Docker likes room — keep roughly **15–20 GB of
+Two things worth knowing: Docker likes room. Keep roughly **15–20 GB of
 free disk space**. And Docker Desktop is **free below Docker's company-size
 threshold** (currently fewer than 250 employees *and* under US $10 m annual
-revenue — almost every law firm qualifies); larger organisations need a paid
+revenue, almost every law firm qualifies); larger organisations need a paid
 Docker subscription.
 
 **2. Download this kit.**
@@ -36,23 +36,23 @@ location for you), press Enter, then type:
 ./suite.sh
 ```
 
-If you see **"permission denied"**, type `bash suite.sh` instead — this
+If you see **"permission denied"**, type `bash suite.sh` instead. This
 happens when the kit came as a ZIP download (unzipping loses the file's
 "may run" marker) and is completely harmless.
 
 That is all. The script checks Docker, generates all your passwords and keys
 automatically (they stay on your machine), **downloads the three ready-made
 apps and starts them**, and finishes with a box showing the three addresses.
-Because the apps are prebuilt, the first run just downloads them — **usually a
+Because the apps are prebuilt, the first run just downloads them. **Usually a
 few minutes** depending on your connection. Every run after that takes seconds.
 
 **4. Bookmark your portal.**
 The script also writes a small web page, `portal/index.html`, inside the
-kit's folder — open it in your browser (double-click it) and bookmark it. It
+kit's folder. Open it in your browser (double-click it) and bookmark it. It
 shows the three tools as cards: a button to open each one, whether it is
 running, and when the last backup was made. It is refreshed every time you
 run `./suite.sh` (any command). To put your firm's name on top:
-`BRAND_NAME="Your Firm" ./suite.sh portal` — the name is remembered from then
+`BRAND_NAME="Your Firm" ./suite.sh portal`. The name is remembered from then
 on (in a small `.suite-config` file in the kit's folder).
 
 ## What you get
@@ -63,21 +63,21 @@ on (in a small `.suite-config` file in the kit's folder).
 | **Dealroom** | Structured rooms for negotiating and signing deals and contracts. | <http://localhost:8486> |
 | **AI Sentinel** | A register and assessment tool for the AI systems your organisation uses. | <http://localhost:8487> |
 
-Sign in on each with your email address — the first sign-in creates your
+Sign in on each with your email address. The first sign-in creates your
 account, locally, with no password and no email being sent anywhere. The
 three apps share one network, so DPO Central and AI Sentinel light up their
 **unified DPIA + AI-Act view** out of the box.
 
 > **⚠ Read this before ever opening a port.**
 > Sign-in accepts **any email address, with no password**. That is safe
-> **only** because the suite answers to this computer alone (localhost) —
-> nobody else can reach these pages. If you ever expose the apps to the
+> **only** because the suite answers to this computer alone (localhost).
+> Nobody else can reach these pages. If you ever expose the apps to the
 > office network or beyond, that trusting sign-in becomes an open door: put
 > real authentication (and HTTPS) in front of them *first*.
 
 **All data stays on this computer**, in Docker's storage. Nothing is sent to
 any cloud. Your settings and secret keys live in the **`.env`** file next to
-this script — the script creates it once and never overwrites it.
+this script. The script creates it once and never overwrites it.
 
 ## Everyday commands
 
@@ -96,7 +96,7 @@ Open Terminal in the kit's folder and type:
 ## Updating safely
 
 One rule: **back up first**. `./suite.sh backup && ./suite.sh update` does
-exactly that — backup, then download the newest images and restart (databases
+exactly that: backup, then download the newest images and restart (databases
 migrate themselves). If anything goes wrong, your backup can bring everything
 back.
 
@@ -107,19 +107,19 @@ Want a fixed, reproducible version instead of always-latest? Edit
 
 `./suite.sh backup` writes an **encrypted** backup for each app into
 `backups/`. The encryption key is the `BACKUP_PASSPHRASE` line inside your
-`.env` file — **store a copy of your `.env` in your password manager**;
+`.env` file. **Store a copy of your `.env` in your password manager**;
 without it a backup cannot be opened, by you or anyone else.
 
 To move to a new computer (or recover after a disaster):
 
 1. On the old machine: `./suite.sh backup`, then copy the newest file from
-   `backups/` for each app — and your **`.env`** file — to a USB stick.
+   `backups/` for each app, and your **`.env`** file, to a USB stick.
 2. On the new machine: do the three steps at the top, but **before** running
    `./suite.sh`, put your saved `.env` back in the kit folder (the script
    keeps it, never overwrites). Then run `./suite.sh`.
 3. Restore each app's data:
    `./suite.sh restore <app> backups/<the file>`
-   (it asks you to type RESTORE to confirm — it replaces what's there).
+   (it asks you to type RESTORE to confirm; it replaces what's there).
 
 One machine is "the real one" at any moment. Don't work on two copies at
 once; there is deliberately no magic merge.
@@ -144,37 +144,37 @@ docker compose up -d      # pulls images, migrates, starts all three
 Ports: DPO Central `8485`, Dealroom `8486`, AI Sentinel `8487`. Data lives in
 named Docker volumes and survives restarts and version bumps. To upgrade, bump
 `TODOLAW_VERSION` in `.env` and `docker compose up -d` again. Everything binds
-to `127.0.0.1` — put a reverse proxy with real auth in front before exposing
+to `127.0.0.1`. Put a reverse proxy with real auth in front before exposing
 it anywhere.
 
 ## Questions you might have
 
 **Is this free?**
 Yes. The three products are open source under the AGPL licence, and the core
-of each is complete — running them on your own hardware like this is exactly
+of each is complete. Running them on your own hardware like this is exactly
 the intended use.
 
 **Do I need the cloud, or an internet connection?**
 No cloud. Internet is only needed to download the apps the first time and when
 you choose to update. Day to day, everything works offline.
 
-**What about AI features — do I need an OpenAI/Anthropic key?**
-No. These three products are deterministic tools — registers, workflows,
+**What about AI features? Do I need an OpenAI/Anthropic key?**
+No. These three products are deterministic tools: registers, workflows,
 documents. They make no AI calls and need no AI keys. (DPO Central *can*
 optionally generate narrative text if you point it at an AI service of your
 own; leave that blank and it simply doesn't.)
 
 **Can my colleagues on the office network use it?**
-Out of the box, no — the suite only answers on the computer it runs on, which
+Out of the box, no. The suite only answers on the computer it runs on, which
 is the safe default (sign-in is deliberately trusting because of it). Opening
-it to the office network, adding HTTPS, and so on is a real IT task — put a
+it to the office network, adding HTTPS, and so on is a real IT task. Put a
 reverse proxy with real authentication in front first.
 
 **I use Windows.**
 Install Docker Desktop for Windows and enable **WSL2** when it asks (that is
-Windows' built-in Linux layer — Docker's installer sets it up). Then run
+Windows' built-in Linux layer; Docker's installer sets it up). Then run
 `./suite.sh` from an Ubuntu/WSL2 terminal, not from plain PowerShell.
 
-**Something is broken — where do I get help?**
-Run `./suite.sh status`, and look at `logs/suite.log` — sending that file
+**Something is broken? Where do I get help?**
+Run `./suite.sh status`, and look at `logs/suite.log`. Sending that file
 along with your question helps enormously. Help: **info@rindogatan.com**.
