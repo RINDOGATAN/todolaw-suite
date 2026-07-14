@@ -113,6 +113,10 @@ services:
       # the integration off; set it (same on both apps) to turn it on.
       AI_SENTINEL_API_URL: http://aisentinel:3003
       AI_SENTINEL_API_KEY: ${BRIDGE_API_KEY:-}
+      # Storefront signing public key — verifies purchased .skill installs + offline
+      # licences. Set in .env (a \n-escaped one-liner PEM; the app restores newlines).
+      # Left empty falls back to a placeholder that rejects everything.
+      SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   dealroom:
     image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-latest}
@@ -126,6 +130,7 @@ services:
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       NEXTAUTH_URL: http://localhost:8486
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
     image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-latest}
@@ -141,6 +146,7 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
       # Receiver side of the DPO Central bridge: authorize DPO's key.
       VW_IMPORT_API_KEYS: ${BRIDGE_API_KEY:-}
+      SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
 volumes:
   dpo-data:
