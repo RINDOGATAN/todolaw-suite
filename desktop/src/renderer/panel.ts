@@ -113,7 +113,7 @@ export function renderPanel(root: HTMLElement, locale: Locale): void {
 	}
 
 	root.querySelector('#start')!.addEventListener('click', () =>
-		runAction(() => window.todolaw.start(), () => t('state.STACK_STARTING', locale), true)
+		runAction(() => window.todolaw.start(), () => t('start.done', locale), true)
 	)
 	root.querySelector('#stop')!.addEventListener('click', () =>
 		runAction(() => window.todolaw.stop(), () => t('stop.done', locale), false)

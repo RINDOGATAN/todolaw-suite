@@ -79,6 +79,7 @@ export const STRINGS = {
 	'state.RUNNING': { en: 'Running', es: 'En marcha' },
 	'state.STOPPED': { en: 'Stopped', es: 'Parada' },
 	'state.STACK_STARTING': { en: 'Starting…', es: 'Arrancando…' },
+	'start.done': { en: 'Everything is running.', es: 'Todo está en marcha.' },
 	'state.NO_ENGINE': { en: 'Docker is not running', es: 'Docker no está en marcha' },
 	'state.FAILED': { en: 'Something went wrong', es: 'Algo ha ido mal' },
 
