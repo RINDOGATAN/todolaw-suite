@@ -1,0 +1,67 @@
+name: Suite integration check
+
+# Boots the three :latest images together exactly the way a customer's
+# `./suite.sh update` would, and fails loudly if the trio no longer stands up:
+# every migrator must exit 0, every app must answer HTTP 200. The apps evolve
+# in their own repos on their own clocks; this is the monthly seam test that
+# catches a break BEFORE a self-hoster's update does. A red run here means:
+# stop tagging app releases until the seam is fixed.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *" # 06:00 UTC, 1st of every month
+  workflow_dispatch:
+
+jobs:
+  boot-latest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate throwaway .env (what suite.sh does on a fresh install)
+        run: |
+          {
+            echo "TODOLAW_VERSION=latest"
+            echo "DPO_DB_PASSWORD=$(openssl rand -hex 24)"
+            echo "DEAL_DB_PASSWORD=$(openssl rand -hex 24)"
+            echo "AIS_DB_PASSWORD=$(openssl rand -hex 24)"
+            echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)"
+            echo "BRIDGE_API_KEY=$(openssl rand -hex 24)"
+            echo "BACKUP_PASSPHRASE=$(openssl rand -base64 24)"
+          } > .env
+
+      - name: Boot the suite (pull :latest images)
+        run: docker compose up -d --quiet-pull
+
+      - name: Every migrator must exit 0
+        run: |
+          for m in dpo-migrator deal-migrator ais-migrator; do
+            code=$(docker wait "todolaw-suite-$m-1")
+            echo "$m exited $code"
+            if [ "$code" != "0" ]; then
+              echo "::error::$m failed (exit $code)"
+              docker logs "todolaw-suite-$m-1" 2>&1 | tail -60
+              exit 1
+            fi
+          done
+
+      - name: Every app must answer HTTP 200
+        run: |
+          for p in 8485 8486 8487; do
+            ok=""
+            for i in $(seq 1 60); do
+              code=$(curl -sL -o /dev/null -w '%{http_code}' --max-time 5 "http://localhost:$p/" || true)
+              if [ "$code" = "200" ]; then ok=1; echo "port $p: 200"; break; fi
+              sleep 5
+            done
+            if [ -z "$ok" ]; then
+              echo "::error::port $p never answered 200 (last code: $code)"
+              docker compose ps
+              docker compose logs --tail 60
+              exit 1
+            fi
+          done
+
+      - name: Record which image digests were tested
+        run: docker compose images
