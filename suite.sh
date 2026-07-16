@@ -113,6 +113,22 @@ check_docker() {
   fi
   [ -f "$COMPOSE_FILE" ] || die "docker-compose.yml is missing from this kit folder." \
         "Re-download the kit from https://github.com/RINDOGATAN/todolaw-suite"
+  check_home
+}
+
+# One computer runs ONE copy of the suite (the compose project name is fixed).
+# Running any command from a second kit folder would silently adopt, and could
+# reconfigure, the existing installation, so refuse and point at the real one.
+check_home() {
+  otherdir=$(docker ps -a --filter "label=com.docker.compose.project=todolaw-suite" \
+      --format '{{.Label "com.docker.compose.project.working_dir"}}' 2>/dev/null \
+      | sort -u | grep -v '^$' | grep -vFx "$HERE" | head -1)
+  [ -z "$otherdir" ] || die "The suite already lives in another folder on this computer:" \
+      "    $otherdir" \
+      "One computer runs one copy of the suite, from one folder. Use that one:" \
+      "    cd \"$otherdir\"  then  ./suite.sh" \
+      "(Moving the install? Stop and remove the old folder's containers first:" \
+      " cd into it, ./suite.sh stop, then delete the folder and run ./suite.sh here.)"
 }
 
 compose() { docker compose --project-directory "$HERE" "$@"; }
