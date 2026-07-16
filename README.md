@@ -170,6 +170,12 @@ is the safe default (sign-in is deliberately trusting because of it). Opening
 it to the office network, adding HTTPS, and so on is a real IT task. Put a
 reverse proxy with real authentication in front first.
 
+**It says a port is already in use.**
+The suite lives on ports 8485, 8486 and 8487 of this computer. If another
+program already sits on one of them, the script stops and names the port
+before touching anything. Quit that other program (or run the suite on a
+different computer) and run `./suite.sh` again.
+
 **I use Windows.**
 Install Docker Desktop for Windows and enable **WSL2** when it asks (that is
 Windows' built-in Linux layer; Docker's installer sets it up). Then run

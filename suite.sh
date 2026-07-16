@@ -117,6 +117,29 @@ check_docker() {
 
 compose() { docker compose --project-directory "$HERE" "$@"; }
 
+# --- pre-flight: are our three ports free? -----------------------------------
+port_in_use() {  # true if something on this computer already answers on the port
+  (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null || return 1
+  exec 3>&- 3<&-
+  return 0
+}
+check_ports() {
+  run_list=$(running_services)
+  busy=""; first=""
+  for app in $APPS; do
+    port=$(app_port "$app")
+    # A port held by our own running app is fine; docker compose handles it.
+    printf '%s\n' "$run_list" | grep -qx "$app" && continue
+    if port_in_use "$port"; then
+      busy="${busy:+$busy, }$port"; [ -n "$first" ] || first=$port
+    fi
+  done
+  [ -z "$busy" ] || die "Another program on this computer is already using port $busy." \
+      "The suite needs ports 8485, 8486 and 8487, and it refuses to fight over them." \
+      "Quit the other program (or ask whoever set it up), then run  ./suite.sh  again." \
+      "Curious what it is? In Terminal:  lsof -i :$first"
+}
+
 # --- settings (.env): generated once, NEVER overwritten --------------------
 ensure_env() {
   if [ -f "$ENV_FILE" ]; then
@@ -314,12 +337,14 @@ cmd_up() {
   check_docker
   ok "Docker is installed and running."
   ensure_env
+  check_ports
 
   say ""
   say "  Downloading the three apps (first time only, a few minutes)..."
   if ! compose pull >>"logs/suite.log" 2>&1; then
     die "Could not download the app images." \
-        "Are you connected to the internet? Details are in  logs/suite.log" \
+        "Usual causes: no internet, or Docker is out of disk space (it likes ~15 GB free)." \
+        "Details are in  logs/suite.log" \
         "You can just run  ./suite.sh  again. It resumes where it left off."
   fi
   ok "Images ready."
