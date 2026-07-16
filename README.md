@@ -10,23 +10,39 @@ nothing to build: the kit downloads three ready-made apps and starts them.
 
 ## Three steps
 
-**1. Install Docker Desktop** (once).
-Docker is a free program that runs the suite quietly in the background.
-Think of it as the engine; you never have to look at it after installing.
-Download it here and install it like any other app:
-<https://www.docker.com/products/docker-desktop/>
+**1. Get Docker** (once). Docker is the free engine that runs the suite
+quietly in the background; after this step you never look at it again.
+Find your computer below and do only that block:
 
-Then open it once. The first open is chatty: it asks you to **accept its
-licence agreement**, and on a Mac also for **your computer's password** so it
-can finish its own setup (that request comes from Docker, and it is normal).
-Approve both, wait until it says it is running (the whale icon settles down),
-and you can close the window. You are done with Docker.
+**On a Mac.**
+Download **Docker Desktop** and install it like any other app:
+<https://www.docker.com/products/docker-desktop/>
+Then open it once. The first open is chatty: **accept its licence agreement**,
+and enter **your computer's password** when it asks (that request comes from
+Docker, and it is normal). Wait until it says it is running (the whale icon
+settles down), close the window, and you are done with Docker.
+
+**On Windows.**
+Install **Docker Desktop** from the same address. When the installer asks
+about **WSL2**, say yes (that is Windows' built-in Linux layer; the installer
+sets it up and may restart the computer). Open Docker Desktop once and accept
+its licence. One extra, once-only step: open **PowerShell** (blue icon in the
+Start menu), type `wsl --install`, and let it finish. From now on you will
+paste suite commands into the **Ubuntu** app in your Start menu — not into
+PowerShell.
+
+**On Linux (Ubuntu and friends).**
+No Docker Desktop needed. In a terminal:
+`curl -fsSL https://get.docker.com | sh`
+then let yourself use Docker without sudo:
+`sudo usermod -aG docker $USER` — log out and back in once, and you are set.
 
 Two things worth knowing: Docker likes room. Keep roughly **15–20 GB of
-free disk space**. And Docker Desktop is **free below Docker's company-size
-threshold** (currently fewer than 250 employees *and* under US $10 m annual
-revenue, almost every law firm qualifies); larger organisations need a paid
-Docker subscription.
+free disk space**. And Docker Desktop (the Mac/Windows app) is **free below
+Docker's company-size threshold** (currently fewer than 250 employees *and*
+under US $10 m annual revenue, almost every law firm qualifies); larger
+organisations need a paid Docker subscription. The Linux engine is free for
+everyone.
 
 **2. Download this kit.**
 On this page on GitHub, click the green **Code** button → **Download ZIP**,
@@ -35,8 +51,9 @@ terminal:
 `git clone https://github.com/RINDOGATAN/todolaw-suite.git`
 
 **3. Run it.**
-Open the Terminal app, drag the kit's folder onto the window (that types its
-location for you), press Enter, then type:
+Open a terminal — on a Mac or Linux that is the **Terminal** app; on Windows
+it is the **Ubuntu** app from step 1 (not PowerShell). Drag the kit's folder
+onto the window (that types its location for you), press Enter, then type:
 
 ```
 ./suite.sh
@@ -183,9 +200,9 @@ before touching anything. Quit that other program (or run the suite on a
 different computer) and run `./suite.sh` again.
 
 **I use Windows.**
-Install Docker Desktop for Windows and enable **WSL2** when it asks (that is
-Windows' built-in Linux layer; Docker's installer sets it up). Then run
-`./suite.sh` from an Ubuntu/WSL2 terminal, not from plain PowerShell.
+Follow the Windows block in step 1 (Docker Desktop with WSL2, then
+`wsl --install` once in PowerShell). After that, every suite command is
+pasted into the **Ubuntu** app from your Start menu — never into PowerShell.
 
 **Something is broken? Where do I get help?**
 Run `./suite.sh status`, and look at `logs/suite.log`. Sending that file
