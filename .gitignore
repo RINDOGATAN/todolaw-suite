@@ -1,14 +1,12 @@
-# The three apps are BAKED into this kit (their clean source trees are
-# committed under apps/). Only per-install runtime artifacts are ignored:
-apps/*/node_modules/
-apps/*/.next/
-apps/*/.vercel/
-apps/**/.env
-apps/**/.env.local
-apps/**/.env.production
-apps/*/logs/
+# Per-install runtime artifacts — a git-cloned kit generates these next to the
+# script; none of them ever belongs in the repo (.env holds the install's keys).
+.env
+backups/
 logs/
 portal/
 .suite-config
 run-transcript.txt
 run-transcript2.txt
+
+# Local working notes, not shipped
+CLAUDE.md
