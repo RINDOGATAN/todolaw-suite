@@ -1,0 +1,131 @@
+:root {
+	font-family: -apple-system, system-ui, sans-serif;
+	color: #1d1d1f;
+}
+body {
+	margin: 0;
+}
+#root {
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 32px 24px;
+}
+.appbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+h1 {
+	font-size: 22px;
+	margin: 0;
+}
+h2 {
+	font-size: 19px;
+}
+.langs .lang {
+	background: #e5e5ea;
+	color: #1d1d1f;
+	padding: 6px 10px;
+	font-size: 13px;
+}
+.langs .lang.active {
+	background: #1d1d1f;
+	color: #fff;
+}
+.step {
+	margin: 24px 0;
+}
+button {
+	font-size: 15px;
+	padding: 10px 18px;
+	border-radius: 8px;
+	border: 0;
+	background: #0a84ff;
+	color: #fff;
+	cursor: pointer;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+button.secondary {
+	background: #e5e5ea;
+	color: #1d1d1f;
+}
+.state {
+	font-weight: 600;
+}
+.hint {
+	color: #555;
+	background: #f2f2f7;
+	border-radius: 8px;
+	padding: 12px;
+}
+.probe {
+	font-weight: 600;
+}
+.probe.checking {
+	color: #555;
+}
+.probe.ok,
+.ok {
+	color: #1e7d45;
+}
+.probe.warn {
+	color: #b25000;
+}
+.probe.bad,
+.bad {
+	color: #c00;
+}
+.muted {
+	color: #555;
+}
+.cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+	margin: 16px 0;
+}
+.card {
+	border: 1px solid #d2d2d7;
+	border-radius: 12px;
+	padding: 16px;
+}
+.card h3 {
+	margin: 0 0 6px;
+}
+.card .blurb {
+	color: #555;
+	font-size: 13px;
+	min-height: 3em;
+	margin: 0 0 8px;
+}
+.card .addr {
+	font-family: ui-monospace, monospace;
+	font-size: 12px;
+	color: #555;
+}
+.appstate {
+	font-weight: 600;
+	font-size: 13px;
+	margin: 0;
+}
+.appstate.running {
+	color: #1e7d45;
+}
+.appstate.stopped {
+	color: #8a8a8e;
+}
+.progress {
+	background: #1d1d1f;
+	color: #d1d1d6;
+	font-family: ui-monospace, monospace;
+	font-size: 12px;
+	padding: 12px;
+	height: 180px;
+	overflow: auto;
+	border-radius: 8px;
+	white-space: pre-wrap;
+}
