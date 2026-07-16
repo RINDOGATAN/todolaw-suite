@@ -13,8 +13,14 @@ nothing to build: the kit downloads three ready-made apps and starts them.
 **1. Install Docker Desktop** (once).
 Docker is a free program that runs the suite quietly in the background.
 Think of it as the engine; you never have to look at it after installing.
-Download it here, install it like any other app, and open it once:
+Download it here and install it like any other app:
 <https://www.docker.com/products/docker-desktop/>
+
+Then open it once. The first open is chatty: it asks you to **accept its
+licence agreement**, and on a Mac also for **your computer's password** so it
+can finish its own setup (that request comes from Docker, and it is normal).
+Approve both, wait until it says it is running (the whale icon settles down),
+and you can close the window. You are done with Docker.
 
 Two things worth knowing: Docker likes room. Keep roughly **15–20 GB of
 free disk space**. And Docker Desktop is **free below Docker's company-size
