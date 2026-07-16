@@ -22,10 +22,12 @@ mac:
   # APPLE_APP_SPECIFIC_PASSWORD still come from the CI env. Signs + notarizes + staples.
   # Automatically skipped on unsigned local builds (no signing identity present).
   #
-  # TODO(signing): uncomment and set the real Apple Developer teamId when we have
-  # signing credentials. M1 ships unsigned; local `npm run dist` builds no-op here.
-  # notarize:
-  #   teamId: TODO_APPLE_TEAM_ID
+  # Rindogatan's Apple Developer team (same enrollment as the firmas.io app).
+  # Needs a "Developer ID Application" identity in the keychain to sign, and
+  # APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD in the env to notarize; without them
+  # local `npm run dist` builds stay unsigned and this block no-ops.
+  notarize:
+    teamId: PVUY3FL877
 # electron-builder notarizes only the .app, then builds a bare .dmg. notarize-dmg.cjs
 # (afterAllArtifactBuild) notarizes + staples the dmg itself; dmg.sign signs it first
 # (Gatekeeper needs the dmg signed for the stapled ticket to be usable). Together this
