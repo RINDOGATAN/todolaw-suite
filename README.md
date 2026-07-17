@@ -189,10 +189,15 @@ No cloud. Internet is only needed to download the apps the first time and when
 you choose to update. Day to day, everything works offline.
 
 **What about AI features? Do I need an OpenAI/Anthropic key?**
-No. These three products are deterministic tools: registers, workflows,
-documents. They make no AI calls and need no AI keys. (DPO Central *can*
-optionally generate narrative text if you point it at an AI service of your
-own; leave that blank and it simply doesn't.)
+No key is needed and, out of the box, the apps make **no AI calls at all**.
+Each app has an *optional* AI assistant (drafting DPIA narratives, breach
+notifications, negotiation explanations) that stays **off until two things
+happen**: you point the suite at an AI engine of your choice in `.env` (your
+own API key, or a fully local model via `docker compose --profile ai up -d` —
+see `.env.example` for recipes), *and* an administrator switches it on inside
+the app, with their name recorded. Leave it off and the products stay fully
+deterministic. Every AI draft is labelled and lands only where a human
+reviews and saves it.
 
 **Can my colleagues on the office network use it?**
 Out of the box, no. The suite only answers on the computer it runs on, which

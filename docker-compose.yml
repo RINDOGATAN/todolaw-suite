@@ -110,6 +110,11 @@ services:
       # Workspace passphrase gate (optional): asked once per browser before
       # sign-in. Empty = no gate. Managed by ./suite.sh passphrase.
       WORKSPACE_PASSPHRASE: ${WORKSPACE_PASSPHRASE:-}
+      # Optional AI engine (see .env.example). Even when set, the apps make no
+      # AI calls until an administrator also enables the AI posture in-app.
+      LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
+      LLM_GATEWAY_KEY: ${LLM_GATEWAY_KEY:-}
+      LLM_MODEL_ALIAS: ${LLM_MODEL_ALIAS:-}
       # Cross-app bridge to AI Sentinel — server-to-server over the shared network
       # (service name, not host.docker.internal). The browser deep-link URL is
       # baked into the image (localhost:8487). Leave BRIDGE_API_KEY empty to keep
@@ -137,6 +142,11 @@ services:
       # Workspace passphrase gate (optional): asked once per browser before
       # sign-in. Empty = no gate. Managed by ./suite.sh passphrase.
       WORKSPACE_PASSPHRASE: ${WORKSPACE_PASSPHRASE:-}
+      # Optional AI engine (see .env.example). Even when set, the apps make no
+      # AI calls until an administrator also enables the AI posture in-app.
+      LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
+      LLM_GATEWAY_KEY: ${LLM_GATEWAY_KEY:-}
+      LLM_MODEL_ALIAS: ${LLM_MODEL_ALIAS:-}
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
@@ -154,11 +164,27 @@ services:
       # Workspace passphrase gate (optional): asked once per browser before
       # sign-in. Empty = no gate. Managed by ./suite.sh passphrase.
       WORKSPACE_PASSPHRASE: ${WORKSPACE_PASSPHRASE:-}
+      # Optional AI engine (see .env.example). Even when set, the apps make no
+      # AI calls until an administrator also enables the AI posture in-app.
+      LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
+      LLM_GATEWAY_KEY: ${LLM_GATEWAY_KEY:-}
+      LLM_MODEL_ALIAS: ${LLM_MODEL_ALIAS:-}
       # Receiver side of the DPO Central bridge: authorize DPO's key.
       VW_IMPORT_API_KEYS: ${BRIDGE_API_KEY:-}
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
+
+  # ------------------------------------------------- optional AI engine (local)
+  # Started ONLY with:  docker compose --profile ai up -d
+  # Then pull a model once:  docker compose exec ollama ollama pull qwen2.5:7b-instruct
+  # and set LLM_GATEWAY_URL=http://ollama:11434 (+ LLM_MODEL_ALIAS) in .env.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    restart: *restart
+    volumes: ["ollama-models:/root/.ollama"]
 
 volumes:
   dpo-data:
   deal-data:
   ais-data:
+  ollama-models:
