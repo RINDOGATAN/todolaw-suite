@@ -203,6 +203,12 @@ BRIDGE_API_KEY=$(openssl rand -hex 24)
 # Encrypts ./suite.sh backup files. You need this exact value to restore on
 # another computer. Keep a copy somewhere safe (e.g. your password manager).
 BACKUP_PASSPHRASE=$(openssl rand -base64 24)
+
+# Asked once per browser before anyone can sign in to the apps. A speed bump
+# against casual snooping on this computer (the real protection is your
+# computer's own login + disk encryption). Show or change it any time:
+#   ./suite.sh passphrase        (blank it out to disable the gate)
+WORKSPACE_PASSPHRASE=$(openssl rand -hex 2)-$(openssl rand -hex 2)-$(openssl rand -hex 2)
 EOF
   chmod 600 "$ENV_FILE"
   ok "Settings created (secrets generated locally, kept private in .env)."
@@ -394,7 +400,9 @@ cmd_up() {
   say "  |   AI Sentinel   http://localhost:8487   AI governance                |"
   say "  |                                                                      |"
   say "  |   Sign in on each with your email address (first sign-in creates     |"
-  say "  |   your account: local only, no password, no cloud).                  |"
+  say "  |   your account: local only, no cloud). If asked for a workspace      |"
+  say "  |   passphrase, it is:  $(printf '%-14s' "$(env_value WORKSPACE_PASSPHRASE)")                                 |"
+  say "  |   (see it again any time:  ./suite.sh passphrase)                    |"
   say "  |                                                                      |"
   say "  |   IMPORTANT. About that sign-in: it accepts ANY email address.       |"
   say "  |   That is safe ONLY because everything binds to this computer        |"
@@ -541,6 +549,39 @@ cmd_status() {
   say ""
 }
 
+cmd_passphrase() {
+  [ -f "$ENV_FILE" ] || die "The suite is not installed here yet. Run ./suite.sh first."
+  current=$(env_value WORKSPACE_PASSPHRASE)
+  case "${1:-}" in
+    --new)
+      newpass=$(openssl rand -hex 2)-$(openssl rand -hex 2)-$(openssl rand -hex 2)
+      if grep -q '^WORKSPACE_PASSPHRASE=' "$ENV_FILE"; then
+        sed -i.bak "s/^WORKSPACE_PASSPHRASE=.*/WORKSPACE_PASSPHRASE=$newpass/" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+      else
+        printf '\nWORKSPACE_PASSPHRASE=%s\n' "$newpass" >>"$ENV_FILE"
+      fi
+      say ""
+      ok "New workspace passphrase:  ${BOLD}$newpass${RESET}"
+      note "Applying it to the running apps..."
+      check_docker
+      compose up -d >>"logs/suite.log" 2>&1 && ok "Done. Everyone signs in with the new passphrase from now on." \
+        || warn "Could not restart the apps; run ./suite.sh to apply it."
+      ;;
+    *)
+      say ""
+      if [ -n "$current" ]; then
+        say "  Workspace passphrase:  ${BOLD}$current${RESET}"
+        note "Asked once per browser before sign-in. Change it: ./suite.sh passphrase --new"
+        note "Disable the gate: blank the WORKSPACE_PASSPHRASE line in .env, then ./suite.sh"
+      else
+        say "  No workspace passphrase is set: sign-in is open to anyone at this computer."
+        note "Add one:  ./suite.sh passphrase --new"
+      fi
+      ;;
+  esac
+  say ""
+}
+
 cmd_portal() {
   gen_portal
   say ""
@@ -558,6 +599,7 @@ usage() {
   say "  ./suite.sh backup              encrypted backup of each app's data"
   say "  ./suite.sh restore <app> <f>   restore one app from a backup file"
   say "  ./suite.sh status              show what is running"
+  say "  ./suite.sh passphrase [--new]  show (or change) the workspace passphrase"
   say "  ./suite.sh portal              regenerate portal/index.html (your bookmark page)"
 }
 
@@ -568,6 +610,7 @@ case "${1:-up}" in
   backup)  cmd_backup ;;
   restore) shift; cmd_restore "$@" ;;
   status)  cmd_status ;;
+  passphrase) shift; cmd_passphrase "$@" ;;
   portal)  cmd_portal ;;
   -h|--help|help) usage ;;
   *) say "Unknown command: $1"; say ""; usage; exit 1 ;;

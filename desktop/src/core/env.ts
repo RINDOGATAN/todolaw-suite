@@ -61,6 +61,11 @@ export function renderEnv(
 		'# Encrypts backup files. You need this exact value to restore on another',
 		'# computer. Keep a copy somewhere safe (e.g. your password manager).',
 		`BACKUP_PASSPHRASE=${secrets.BACKUP_PASSPHRASE}`,
+		'',
+		'# Asked once per browser before anyone can sign in to the apps. A speed bump',
+		'# against casual snooping on this computer; the real protection is the',
+		'# machine\'s own login + disk encryption. Blank = no gate.',
+		`WORKSPACE_PASSPHRASE=${secrets.WORKSPACE_PASSPHRASE}`,
 		''
 	].join('\n')
 }

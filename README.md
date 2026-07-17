@@ -87,16 +87,22 @@ on (in a small `.suite-config` file in the kit's folder).
 | **AI Sentinel** | A register and assessment tool for the AI systems your organisation uses. | <http://localhost:8487> |
 
 Sign in on each with your email address. The first sign-in creates your
-account, locally, with no password and no email being sent anywhere. The
-three apps share one network, so DPO Central and AI Sentinel light up their
-**unified DPIA + AI-Act view** out of the box.
+account, locally, with no email being sent anywhere. New installs also set a
+**workspace passphrase** (shown in the box at the end of the install, and any
+time with `./suite.sh passphrase`): each browser is asked for it once before
+sign-in. Your email is your *identity* — it names you on approvals, audit
+trails and licences; the passphrase is the *lock*. The three apps share one
+network, so DPO Central and AI Sentinel light up their **unified DPIA +
+AI-Act view** out of the box.
 
-> **⚠ Read this before ever opening a port.**
-> Sign-in accepts **any email address, with no password**. That is safe
-> **only** because the suite answers to this computer alone (localhost).
-> Nobody else can reach these pages. If you ever expose the apps to the
-> office network or beyond, that trusting sign-in becomes an open door: put
-> real authentication (and HTTPS) in front of them *first*.
+> **⚠ What actually protects your data.**
+> The suite answers to this computer alone (localhost) — nobody on the
+> network can reach these pages at all. The workspace passphrase adds a
+> speed bump against casual snooping *at* the computer; the real wall for a
+> lost or stolen machine is your computer's own login and disk encryption
+> (FileVault on a Mac — turn it on). If you ever expose the apps to the
+> office network or beyond, put real authentication (and HTTPS) in front of
+> them *first*.
 
 **All data stays on this computer**, in Docker's storage. Nothing is sent to
 any cloud. Your settings and secret keys live in the **`.env`** file next to
@@ -114,6 +120,7 @@ Open Terminal in the kit's folder and type:
 | Make an encrypted backup | `./suite.sh backup` |
 | Update to the latest version | `./suite.sh backup && ./suite.sh update` |
 | Restore one app from a backup | `./suite.sh restore <app> <file>` |
+| See (or change) the workspace passphrase | `./suite.sh passphrase` |
 | Refresh the portal page | `./suite.sh portal` |
 
 ## Updating safely

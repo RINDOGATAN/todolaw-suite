@@ -16,6 +16,8 @@ export interface SuiteSecrets {
 	BRIDGE_API_KEY: string
 	/** Encrypts backup files (openssl aes-256-cbc -pbkdf2 compatible — core/backup.ts). */
 	BACKUP_PASSPHRASE: string
+	/** Asked once per browser before sign-in; short and typeable (xxxx-xxxx-xxxx). */
+	WORKSPACE_PASSPHRASE: string
 }
 
 /** Injectable RNG so tests can be deterministic; defaults to crypto.randomBytes. */
@@ -34,6 +36,7 @@ export function generateSecrets(rng: Rng = randomBytes): SuiteSecrets {
 		AIS_DB_PASSWORD: hex(24, rng),
 		NEXTAUTH_SECRET: b64(32, rng),
 		BRIDGE_API_KEY: hex(24, rng),
-		BACKUP_PASSPHRASE: b64(24, rng)
+		BACKUP_PASSPHRASE: b64(24, rng),
+		WORKSPACE_PASSPHRASE: `${hex(2, rng)}-${hex(2, rng)}-${hex(2, rng)}`
 	}
 }

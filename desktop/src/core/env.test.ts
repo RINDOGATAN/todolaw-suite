@@ -8,7 +8,8 @@ const secrets: SuiteSecrets = {
 	AIS_DB_PASSWORD: 'c'.repeat(48),
 	NEXTAUTH_SECRET: 'QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVphYmNkZWY=',
 	BRIDGE_API_KEY: 'd'.repeat(48),
-	BACKUP_PASSPHRASE: 'cGFzc3BocmFzZS1iYXNlNjQtdmFsdWU4'
+	BACKUP_PASSPHRASE: 'cGFzc3BocmFzZS1iYXNlNjQtdmFsdWU4',
+	WORKSPACE_PASSPHRASE: 'a3f2-9c1b-77de'
 }
 
 describe('renderEnv', () => {
@@ -21,7 +22,7 @@ describe('renderEnv', () => {
 		expect(env.NEXTAUTH_SECRET).toBe(secrets.NEXTAUTH_SECRET)
 		expect(env.BRIDGE_API_KEY).toBe(secrets.BRIDGE_API_KEY)
 		expect(env.BACKUP_PASSPHRASE).toBe(secrets.BACKUP_PASSPHRASE)
-		expect(Object.keys(env)).toHaveLength(7)
+		expect(Object.keys(env)).toHaveLength(8)
 	})
 
 	it('defaults the version to "latest" and honours a pinned override', () => {
@@ -50,6 +51,7 @@ describe('envValue', () => {
 	it('reads a single value without evaluating the file (suite.sh env_value)', () => {
 		const text = renderEnv(secrets)
 		expect(envValue(text, 'BACKUP_PASSPHRASE')).toBe(secrets.BACKUP_PASSPHRASE)
+		expect(envValue(text, 'WORKSPACE_PASSPHRASE')).toBe(secrets.WORKSPACE_PASSPHRASE)
 		expect(envValue(text, 'TODOLAW_VERSION')).toBe('latest')
 	})
 

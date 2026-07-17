@@ -10,7 +10,8 @@ describe('generateSecrets', () => {
 			'BRIDGE_API_KEY',
 			'DEAL_DB_PASSWORD',
 			'DPO_DB_PASSWORD',
-			'NEXTAUTH_SECRET'
+			'NEXTAUTH_SECRET',
+			'WORKSPACE_PASSPHRASE'
 		])
 	})
 
@@ -25,6 +26,11 @@ describe('generateSecrets', () => {
 		const v = generateSecrets().NEXTAUTH_SECRET
 		expect(v).toMatch(/^[A-Za-z0-9+/]{43}=$/)
 		expect(Buffer.from(v, 'base64').length).toBe(32)
+	})
+
+	it('shapes WORKSPACE_PASSPHRASE typeable: xxxx-xxxx-xxxx hex groups', () => {
+		const v = generateSecrets().WORKSPACE_PASSPHRASE
+		expect(v).toMatch(/^[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}$/)
 	})
 
 	it('shapes BACKUP_PASSPHRASE like `openssl rand -base64 24` (32 chars, decodes to 24 bytes)', () => {

@@ -1,7 +1,7 @@
 # todo.law suite — single-command install from prebuilt images.
 #
-# Unlike suite.sh (which git-clones each app and BUILDS it from source), this
-# pulls pinned, prebuilt images from GHCR. One file, one network, one command:
+# This is the whole install: pinned, prebuilt images pulled from GHCR
+# (suite.sh is a friendly wrapper around this same file). One command:
 #
 #   cp .env.example .env      # set the passwords + a bridge key
 #   docker compose up -d
@@ -107,6 +107,9 @@ services:
       DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
       NEXTAUTH_URL: http://localhost:8485
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      # Workspace passphrase gate (optional): asked once per browser before
+      # sign-in. Empty = no gate. Managed by ./suite.sh passphrase.
+      WORKSPACE_PASSPHRASE: ${WORKSPACE_PASSPHRASE:-}
       # Cross-app bridge to AI Sentinel — server-to-server over the shared network
       # (service name, not host.docker.internal). The browser deep-link URL is
       # baked into the image (localhost:8487). Leave BRIDGE_API_KEY empty to keep
@@ -131,6 +134,9 @@ services:
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       NEXTAUTH_URL: http://localhost:8486
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      # Workspace passphrase gate (optional): asked once per browser before
+      # sign-in. Empty = no gate. Managed by ./suite.sh passphrase.
+      WORKSPACE_PASSPHRASE: ${WORKSPACE_PASSPHRASE:-}
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
@@ -145,6 +151,9 @@ services:
       DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       NEXTAUTH_URL: http://localhost:8487
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      # Workspace passphrase gate (optional): asked once per browser before
+      # sign-in. Empty = no gate. Managed by ./suite.sh passphrase.
+      WORKSPACE_PASSPHRASE: ${WORKSPACE_PASSPHRASE:-}
       # Receiver side of the DPO Central bridge: authorize DPO's key.
       VW_IMPORT_API_KEYS: ${BRIDGE_API_KEY:-}
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
