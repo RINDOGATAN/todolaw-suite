@@ -67,6 +67,8 @@ export const STRINGS = {
 		en: 'Each browser asks for it once before sign-in. It is saved in the todo-law folder (.env); see it again here or with ./suite.sh passphrase.',
 		es: 'Cada navegador la pedirá una vez antes de iniciar sesión. Está guardada en la carpeta todo-law (.env); vuelve a verla aquí o con ./suite.sh passphrase.'
 	},
+	'install.passphraseCopy': { en: 'Copy', es: 'Copiar' },
+	'install.passphraseCopied': { en: 'Copied ✓', es: 'Copiada ✓' },
 	'panel.showPassphrase': { en: 'Show workspace passphrase', es: 'Mostrar la contraseña del espacio de trabajo' },
 	'panel.noPassphrase': { en: 'No passphrase is set for this install.', es: 'Esta instalación no tiene contraseña.' },
 

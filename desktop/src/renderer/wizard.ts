@@ -152,10 +152,17 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 				const pp = await window.todolaw.passphrase()
 				if (pp) {
 					const box = el.querySelector('#pp') as HTMLElement
-					box.style.display = 'block'
-					box.innerHTML = `<strong>${t('install.passphraseTitle', loc)}</strong>
-						<code>${pp}</code>
+					box.style.display = 'flex'
+					box.innerHTML = `<span class="pp-title">🔑 ${t('install.passphraseTitle', loc)}</span>
+						<div class="pp-row"><code>${pp}</code>
+							<button class="pp-copy" id="pp-copy">${t('install.passphraseCopy', loc)}</button>
+							<span class="pp-copied" id="pp-copied" style="display:none">${t('install.passphraseCopied', loc)}</span>
+						</div>
 						<span class="muted">${t('install.passphraseNote', loc)}</span>`
+					box.querySelector('#pp-copy')!.addEventListener('click', () => {
+						void navigator.clipboard.writeText(pp)
+						;(box.querySelector('#pp-copied') as HTMLElement).style.display = 'inline'
+					})
 				}
 				step = 'welcome' // reset for a future fresh install on this machine
 				stopPolling()
