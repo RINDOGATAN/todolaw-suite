@@ -120,6 +120,7 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 				<button id="go">${t('install.button', loc)}</button>
 			</div>
 			<p id="status"></p>
+			<div id="pp" class="passphrase-box" style="display:none"></div>
 			<pre id="progress" class="progress" style="display:none"></pre>
 		`
 		const status = el.querySelector('#status') as HTMLElement
@@ -146,6 +147,16 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 			if (res.ok) {
 				status.className = 'ok'
 				status.textContent = t('install.done', loc)
+				// Show the workspace passphrase the install just minted: browsers
+				// will ask for it before sign-in, so the operator must see it once.
+				const pp = await window.todolaw.passphrase()
+				if (pp) {
+					const box = el.querySelector('#pp') as HTMLElement
+					box.style.display = 'block'
+					box.innerHTML = `<strong>${t('install.passphraseTitle', loc)}</strong>
+						<code>${pp}</code>
+						<span class="muted">${t('install.passphraseNote', loc)}</span>`
+				}
 				step = 'welcome' // reset for a future fresh install on this machine
 				stopPolling()
 				done()

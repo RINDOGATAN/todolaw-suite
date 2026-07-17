@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 /** Typed bridge the renderer uses; no Node/Electron exposed beyond these calls. */
 const api = {
 	isFirstRun: (): Promise<boolean> => ipcRenderer.invoke('config:isFirstRun'),
+	passphrase: (): Promise<string | null> => ipcRenderer.invoke('config:passphrase'),
 	probeEngine: (): Promise<unknown> => ipcRenderer.invoke('engine:probe'),
 	openDockerDownload: (): Promise<void> => ipcRenderer.invoke('engine:openDockerDownload'),
 	openApp: (service: string): Promise<void> => ipcRenderer.invoke('app:open', service),

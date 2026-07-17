@@ -1,7 +1,7 @@
 {
 	"name": "todolaw-suite-desktop",
-	"version": "0.1.0",
-	"description": "TODO.LAW Suite for Mac — desktop launcher for the todo.law suite (DPO Central, Dealroom, AI Sentinel)",
+	"version": "0.1.1",
+	"description": "TODO.LAW Suite for Mac \u2014 desktop launcher for the todo.law suite (DPO Central, Dealroom, AI Sentinel)",
 	"author": "RINDOGATAN",
 	"license": "Apache-2.0",
 	"main": "out/main/index.js",

@@ -51,6 +51,8 @@ export function renderPanel(root: HTMLElement, locale: Locale): void {
 		</div>
 		<p id="msg"></p>
 		<pre id="progress" class="progress" style="display:none"></pre>
+		<p class="muted"><a href="#" id="show-pp">${t('panel.showPassphrase', locale)}</a>
+			<span id="pp-value" style="display:none"></span></p>
 	`
 
 	const stateEl = root.querySelector('#state') as HTMLElement
@@ -121,6 +123,14 @@ export function renderPanel(root: HTMLElement, locale: Locale): void {
 	root.querySelector('#update')!.addEventListener('click', () =>
 		runAction(() => window.todolaw.update(), () => t('update.done', locale), true)
 	)
+	root.querySelector('#show-pp')!.addEventListener('click', async (e) => {
+		e.preventDefault()
+		const span = root.querySelector('#pp-value') as HTMLElement
+		if (span.style.display !== 'none') { span.style.display = 'none'; return }
+		const pp = await window.todolaw.passphrase()
+		span.innerHTML = pp ? ` <code>${pp}</code>` : ` ${t('panel.noPassphrase', locale)}`
+		span.style.display = 'inline'
+	})
 	root.querySelector('#backup')!.addEventListener('click', () =>
 		runAction(
 			() => window.todolaw.backup(),

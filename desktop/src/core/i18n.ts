@@ -59,6 +59,16 @@ export const STRINGS = {
 		es: 'Instalando… la primera vez puede tardar unos minutos.'
 	},
 	'install.done': { en: 'The suite is installed and starting.', es: 'La suite está instalada y arrancando.' },
+	'install.passphraseTitle': {
+		en: 'Your workspace passphrase',
+		es: 'Tu contraseña del espacio de trabajo'
+	},
+	'install.passphraseNote': {
+		en: 'Each browser asks for it once before sign-in. It is saved in the todo-law folder (.env); see it again here or with ./suite.sh passphrase.',
+		es: 'Cada navegador la pedirá una vez antes de iniciar sesión. Está guardada en la carpeta todo-law (.env); vuelve a verla aquí o con ./suite.sh passphrase.'
+	},
+	'panel.showPassphrase': { en: 'Show workspace passphrase', es: 'Mostrar la contraseña del espacio de trabajo' },
+	'panel.noPassphrase': { en: 'No passphrase is set for this install.', es: 'Esta instalación no tiene contraseña.' },
 
 	// --- common ----------------------------------------------------------------
 	'common.continue': { en: 'Continue', es: 'Continuar' },

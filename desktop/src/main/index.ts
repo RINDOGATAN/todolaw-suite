@@ -121,6 +121,9 @@ async function backupApp(dbApp: AppInfo, passphrase: string, stamp: Date): Promi
 
 ipcMain.handle('config:isFirstRun', () => !envExists())
 
+// The operator's own install secret (same visibility as `./suite.sh passphrase`).
+ipcMain.handle('config:passphrase', () => readEnvValue('WORKSPACE_PASSPHRASE'))
+
 ipcMain.handle('engine:probe', async () => {
 	const info = await runDocker(['info'])
 	return parseEngineProbe(info.code, info.stdout, info.stderr)
