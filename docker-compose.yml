@@ -115,6 +115,17 @@ services:
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
       LLM_GATEWAY_KEY: ${LLM_GATEWAY_KEY:-}
       LLM_MODEL_ALIAS: ${LLM_MODEL_ALIAS:-}
+      # Optional posture-routed lanes: different engine per confidentiality
+      # lane (EU cloud / US cloud / local). Absent = the base engine answers.
+      LLM_GATEWAY_URL_EU: ${LLM_GATEWAY_URL_EU:-}
+      LLM_GATEWAY_KEY_EU: ${LLM_GATEWAY_KEY_EU:-}
+      LLM_MODEL_ALIAS_EU: ${LLM_MODEL_ALIAS_EU:-}
+      LLM_GATEWAY_URL_US: ${LLM_GATEWAY_URL_US:-}
+      LLM_GATEWAY_KEY_US: ${LLM_GATEWAY_KEY_US:-}
+      LLM_MODEL_ALIAS_US: ${LLM_MODEL_ALIAS_US:-}
+      LLM_GATEWAY_URL_LOCAL: ${LLM_GATEWAY_URL_LOCAL:-}
+      LLM_GATEWAY_KEY_LOCAL: ${LLM_GATEWAY_KEY_LOCAL:-}
+      LLM_MODEL_ALIAS_LOCAL: ${LLM_MODEL_ALIAS_LOCAL:-}
       # Cross-app bridge to AI Sentinel — server-to-server over the shared network
       # (service name, not host.docker.internal). The browser deep-link URL is
       # baked into the image (localhost:8487). Leave BRIDGE_API_KEY empty to keep
@@ -147,6 +158,17 @@ services:
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
       LLM_GATEWAY_KEY: ${LLM_GATEWAY_KEY:-}
       LLM_MODEL_ALIAS: ${LLM_MODEL_ALIAS:-}
+      # Optional posture-routed lanes: different engine per confidentiality
+      # lane (EU cloud / US cloud / local). Absent = the base engine answers.
+      LLM_GATEWAY_URL_EU: ${LLM_GATEWAY_URL_EU:-}
+      LLM_GATEWAY_KEY_EU: ${LLM_GATEWAY_KEY_EU:-}
+      LLM_MODEL_ALIAS_EU: ${LLM_MODEL_ALIAS_EU:-}
+      LLM_GATEWAY_URL_US: ${LLM_GATEWAY_URL_US:-}
+      LLM_GATEWAY_KEY_US: ${LLM_GATEWAY_KEY_US:-}
+      LLM_MODEL_ALIAS_US: ${LLM_MODEL_ALIAS_US:-}
+      LLM_GATEWAY_URL_LOCAL: ${LLM_GATEWAY_URL_LOCAL:-}
+      LLM_GATEWAY_KEY_LOCAL: ${LLM_GATEWAY_KEY_LOCAL:-}
+      LLM_MODEL_ALIAS_LOCAL: ${LLM_MODEL_ALIAS_LOCAL:-}
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
@@ -169,6 +191,17 @@ services:
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
       LLM_GATEWAY_KEY: ${LLM_GATEWAY_KEY:-}
       LLM_MODEL_ALIAS: ${LLM_MODEL_ALIAS:-}
+      # Optional posture-routed lanes: different engine per confidentiality
+      # lane (EU cloud / US cloud / local). Absent = the base engine answers.
+      LLM_GATEWAY_URL_EU: ${LLM_GATEWAY_URL_EU:-}
+      LLM_GATEWAY_KEY_EU: ${LLM_GATEWAY_KEY_EU:-}
+      LLM_MODEL_ALIAS_EU: ${LLM_MODEL_ALIAS_EU:-}
+      LLM_GATEWAY_URL_US: ${LLM_GATEWAY_URL_US:-}
+      LLM_GATEWAY_KEY_US: ${LLM_GATEWAY_KEY_US:-}
+      LLM_MODEL_ALIAS_US: ${LLM_MODEL_ALIAS_US:-}
+      LLM_GATEWAY_URL_LOCAL: ${LLM_GATEWAY_URL_LOCAL:-}
+      LLM_GATEWAY_KEY_LOCAL: ${LLM_GATEWAY_KEY_LOCAL:-}
+      LLM_MODEL_ALIAS_LOCAL: ${LLM_MODEL_ALIAS_LOCAL:-}
       # Receiver side of the DPO Central bridge: authorize DPO's key.
       VW_IMPORT_API_KEYS: ${BRIDGE_API_KEY:-}
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}

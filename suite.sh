@@ -544,6 +544,19 @@ cmd_status() {
       printf '  %-14s %-26s %s\n' "$title" "http://localhost:$port" "${YELLOW}starting (HTTP $code)${RESET}"
     fi
   done
+  # Sign-in gate truth: warn loudly if .env and the running apps disagree
+  # (a passphrase everyone believes is on, silently off, is worse than none).
+  envpp=$(env_value WORKSPACE_PASSPHRASE)
+  runpp=$(docker inspect todolaw-suite-dpocentral-1 --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep -c '^WORKSPACE_PASSPHRASE=..*' || true)
+  say ""
+  if [ -n "$envpp" ] && [ "${runpp:-0}" -ge 1 ]; then
+    ok "Sign-in gate: ON (workspace passphrase; see it with ./suite.sh passphrase)"
+  elif [ -n "$envpp" ]; then
+    warn "Sign-in gate: passphrase is set in .env but NOT active in the running apps."
+    warn "Run  ./suite.sh  once to apply it."
+  else
+    note "Sign-in gate: OFF (no workspace passphrase; add one: ./suite.sh passphrase --new)"
+  fi
   gen_portal
   note "portal/index.html refreshed. That page shows this same picture."
   say ""
