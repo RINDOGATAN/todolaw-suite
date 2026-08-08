@@ -27,9 +27,13 @@ and `~/nel-signing/developer-id-application.csr`.
 
    If the identity shows as untrusted, install Apple's intermediate from
    <https://www.apple.com/certificateauthority/> (Developer ID CA) and re-check.
-3. **App-specific password for notarization.** At <https://appleid.apple.com>
-   → Sign-In & Security → App-Specific Passwords → generate one named
-   `todolaw-suite-notarize`. Store it in the password manager.
+3. **App-specific password for notarization.** Already generated and stored in
+   the build Mac's **login keychain** as generic-password item
+   **`todolaw-notarize`** (account: the account-holder Apple ID). Retrieve it
+   inline with `security find-generic-password -w -s todolaw-notarize` — no
+   password manager lookup needed. If it's ever lost, generate a new one at
+   <https://appleid.apple.com> → Sign-In & Security → App-Specific Passwords
+   and store it back under the same keychain item name.
 
 ## Every release
 
@@ -37,9 +41,13 @@ and `~/nel-signing/developer-id-application.csr`.
 cd desktop
 npm test && npm run typecheck
 APPLE_ID="<account-holder Apple ID email>" \
-APPLE_APP_SPECIFIC_PASSWORD="<the app-specific password>" \
+APPLE_APP_SPECIFIC_PASSWORD="$(security find-generic-password -w -s todolaw-notarize)" \
+APPLE_TEAM_ID="PVUY3FL877" \
 npm run dist
 ```
+
+`APPLE_TEAM_ID` is required: `build/notarize-dmg.cjs` checks it explicitly and
+silently skips DMG notarization + stapling without it.
 
 electron-builder signs the .app (hardened runtime + entitlements), notarizes
 it, builds the DMG, signs it, and `build/notarize-dmg.cjs` notarizes + staples
