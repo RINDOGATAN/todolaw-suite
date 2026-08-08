@@ -126,9 +126,14 @@ Open Terminal in the kit's folder and type:
 ## Updating safely
 
 One rule: **back up first**. `./suite.sh backup && ./suite.sh update` does
-exactly that: backup, then download the newest images and restart (databases
-migrate themselves). If anything goes wrong, your backup can bring everything
-back.
+exactly that: backup, then refresh the kit itself (so fixes to this script
+reach existing installs too), download the newest images, restart (databases
+migrate themselves), and clean up the superseded image layers. If anything
+goes wrong, your backup can bring everything back.
+
+Installed from a kit older than v0.1.12? Your `suite.sh` predates the
+self-refresh — run the install one-liner from todo.law once more; it refreshes
+the kit in place and never touches `.env`, your settings, or your data.
 
 Want a fixed, reproducible version instead of always-latest? Edit
 `TODOLAW_VERSION` in `.env` (e.g. `v0.1.1`), then `./suite.sh update`.

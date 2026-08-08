@@ -45,6 +45,13 @@ DOCKER_LINK="https://www.docker.com/products/docker-desktop/"
 # defaults to "latest" so the suite always pulls the newest published images.
 DEFAULT_VERSION="latest"
 
+# This kit's own release tag — MUST match the git tag this file ships in
+# (bump on every kit release). `update` compares it against the tag pinned in
+# todo.law/install.sh (the same pin fresh installs get) and refreshes the kit
+# first, so fixes to suite.sh itself reach existing installs, not only new ones.
+KIT_VERSION="v0.1.12"
+INSTALLER_URL="https://todo.law/install.sh"
+
 # --- remembered settings (.suite-config) -------------------------------------
 if [ -n "${BRAND_NAME:-}" ]; then
   esc=$(printf '%s' "$BRAND_NAME" | sed "s/'/'\\\\''/g")
@@ -485,12 +492,57 @@ cmd_stop() {
   say ""
 }
 
+# Fetch a URL to stdout, short timeout. Empty output = failed / offline.
+fetch_url() {
+  if command -v curl >/dev/null 2>&1; then curl -fsSL --max-time 15 "$1" 2>/dev/null
+  elif command -v wget >/dev/null 2>&1; then wget -qO- --timeout=15 "$1" 2>/dev/null
+  fi
+}
+
+# Refresh THIS kit (suite.sh, docker-compose.yml, docs) before updating the
+# apps. Lesson from v0.1.11: the "update cleans up old layers" fix lived in
+# suite.sh itself, so `./suite.sh update` — which only pulled images — could
+# never deliver it to existing installs. The latest kit tag is read from the
+# KIT_URL pin in todo.law/install.sh (bumped on every kit release, so fresh
+# installs and updates follow the same pin). Never blocks an update: any
+# failure here warns and falls through to the image update on the current kit.
+kit_self_update() {
+  [ "${TODOLAW_KIT_REFRESHED:-}" = "1" ] && return 0  # already refreshed this run
+  latest=$(fetch_url "$INSTALLER_URL" | sed -n 's|^KIT_URL=.*/tags/\(v[0-9][0-9.]*\)\.tar\.gz.*|\1|p' | head -1)
+  if [ -z "$latest" ]; then
+    warn "Could not check for a newer kit (offline?). Updating the apps with this one ($KIT_VERSION)."
+    return 0
+  fi
+  [ "$latest" = "$KIT_VERSION" ] && return 0
+  say "  A newer kit is out ($KIT_VERSION -> $latest). Refreshing the kit first..."
+  tmpk=$(mktemp -d 2>/dev/null || mktemp -d -t todolaw) || { warn "Could not create a temporary folder. Skipping the kit refresh."; return 0; }
+  if ! fetch_url "https://github.com/RINDOGATAN/todolaw-suite/archive/refs/tags/$latest.tar.gz" >"$tmpk/kit.tar.gz" \
+     || ! [ -s "$tmpk/kit.tar.gz" ] || ! tar -xzf "$tmpk/kit.tar.gz" -C "$tmpk" 2>/dev/null; then
+    rm -rf "$tmpk"; warn "Could not download kit $latest. Continuing with this one ($KIT_VERSION)."; return 0
+  fi
+  src=$(find "$tmpk" -maxdepth 1 -type d -name 'todolaw-suite-*' 2>/dev/null | head -1)
+  if [ -z "$src" ] || [ ! -f "$src/suite.sh" ]; then
+    rm -rf "$tmpk"; warn "Downloaded kit $latest looks incomplete. Continuing with this one ($KIT_VERSION)."; return 0
+  fi
+  # Overlay like install.sh does (never touches .env / .suite-config / backups —
+  # they are not in the tarball). suite.sh itself goes in by atomic rename so
+  # this RUNNING copy keeps reading its old inode; then re-exec the new one.
+  cp "$src/suite.sh" "$HERE/suite.sh.new" && chmod +x "$HERE/suite.sh.new" || { rm -rf "$tmpk" "$HERE/suite.sh.new"; warn "Could not stage the new kit. Continuing with this one."; return 0; }
+  rm -f "$src/suite.sh"
+  cp -R "$src"/. "$HERE"/ 2>/dev/null
+  mv -f "$HERE/suite.sh.new" "$HERE/suite.sh"
+  rm -rf "$tmpk"
+  ok "Kit refreshed to $latest. Continuing the update with it..."
+  TODOLAW_KIT_REFRESHED=1 exec bash "$HERE/suite.sh" update
+}
+
 cmd_update() {
   check_docker
   say ""
   say "${BOLD}Updating the suite.${RESET}"
   say "${DIM}Tip: run  ./suite.sh backup  first, so you can always go back.${RESET}"
   [ -f "$ENV_FILE" ] || die "Nothing to update. The suite is not installed here yet. Run ./suite.sh first."
+  kit_self_update
   ver=$(env_value TODOLAW_VERSION)
   say ""
   say "  Fetching the latest images (TODOLAW_VERSION=${ver:-$DEFAULT_VERSION})..."
@@ -607,6 +659,7 @@ cmd_status() {
   else
     note "Sign-in gate: OFF (no workspace passphrase; add one: ./suite.sh passphrase --new)"
   fi
+  note "Kit: $KIT_VERSION (./suite.sh update refreshes the kit itself, then the apps)"
   gen_portal
   note "portal/index.html refreshed. That page shows this same picture."
   say ""
