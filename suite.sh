@@ -504,6 +504,10 @@ cmd_update() {
       wait_healthy "$app" && ok "$(app_title "$app"): http://localhost:$(app_port "$app")" \
         || warn "$(app_title "$app") not answering yet. Give it a minute."
     done
+    # Reclaim the superseded image layers (dangling only — pinned tags and
+    # anything in use are untouched). Best-effort: an update never fails here.
+    say "  Cleaning up old image layers..."
+    docker image prune -f >>"logs/suite.log" 2>&1 || true
   else
     warn "Restart failed. See logs/suite.log"
   fi

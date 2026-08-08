@@ -184,7 +184,13 @@ ipcMain.handle('suite:update', async (): Promise<ActionResult> => {
 		if (!envExists()) return fail('not-installed')
 		const pre = await preflight(true)
 		if (!pre.ok) return pre
-		return await pullAndUp()
+		const res = await pullAndUp()
+		if (res.ok) {
+			// Reclaim the superseded image layers (dangling only — pinned tags and
+			// anything in use are untouched). Best-effort: an update never fails here.
+			await runDocker(['image', 'prune', '-f']).catch(() => {})
+		}
+		return res
 	} catch (err) {
 		return fail('generic', String(err))
 	}
