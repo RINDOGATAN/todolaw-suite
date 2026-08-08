@@ -44,8 +44,9 @@ const normalize = (p: string): string => (p.length > 1 ? p.replace(/\/+$/, '') :
  * One-home guard (suite.sh check_home): one computer runs ONE copy of the suite, from
  * ONE folder. Given the com.docker.compose.project.working_dir labels of every
  * container in project "todolaw-suite", return the first directory that is NOT our
- * install home — the caller must refuse and point the user at that folder. For M1
- * this is refuse-only (same as suite.sh); adopt-or-migrate is a later refinement.
+ * install home — the caller must refuse to act on that folder from here. The desktop
+ * app can ADOPT it instead (core/adopt.ts): re-point its own install home at the
+ * discovered folder, never reconfigure it from this one.
  */
 export function findForeignHome(workingDirs: string[], home: string): string | null {
 	const ours = normalize(home)

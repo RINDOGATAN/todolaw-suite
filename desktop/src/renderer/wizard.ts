@@ -35,7 +35,8 @@ export async function errorText(code: string, detail: string | undefined, locale
 		'previous-install': 'error.previousInstall',
 		'ports-busy': 'error.portsBusy',
 		'not-installed': 'error.notInstalled',
-		'no-passphrase': 'error.noPassphrase'
+		'no-passphrase': 'error.noPassphrase',
+		'adopt-no-env': 'error.adoptNoEnv'
 	}
 	const key = keys[code] ?? 'error.generic'
 	const home = key === 'error.previousInstall' ? await window.todolaw.home() : ''
@@ -120,13 +121,38 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 				<button id="go">${t('install.button', loc)}</button>
 			</div>
 			<p id="status"></p>
+			<div id="adopt" class="step" style="display:none"></div>
 			<div id="pp" class="passphrase-box" style="display:none"></div>
 			<pre id="progress" class="progress" style="display:none"></pre>
 		`
 		const status = el.querySelector('#status') as HTMLElement
+		const adoptBox = el.querySelector('#adopt') as HTMLElement
 		const progressEl = el.querySelector('#progress') as HTMLElement
 		const go = el.querySelector('#go') as HTMLButtonElement
 		const back = el.querySelector('#back') as HTMLButtonElement
+
+		/**
+		 * The one-home guard found a CLI-kit install in another folder. Refusing is
+		 * right, but a dead end for the user the app is meant to serve — so offer to
+		 * ADOPT that install (persist its folder as our home; nothing there is
+		 * touched) as the primary way forward, then re-run the install against it.
+		 */
+		function offerAdoption(dir: string): void {
+			adoptBox.style.display = 'block'
+			adoptBox.innerHTML = `<p>${t('adopt.offer', loc)}</p>
+				<button id="adopt-go">${t('adopt.button', loc, { detail: dir })}</button>`
+			adoptBox.querySelector('#adopt-go')!.addEventListener('click', async () => {
+				;(adoptBox.querySelector('#adopt-go') as HTMLButtonElement).disabled = true
+				const r = (await window.todolaw.adoptHome()) as ActionResult
+				adoptBox.style.display = 'none'
+				if (r.ok) {
+					go.click() // continue the install against the adopted folder
+				} else {
+					status.className = 'bad'
+					status.textContent = await errorText(r.code ?? 'generic', r.detail, loc)
+				}
+			})
+		}
 
 		const MAX_LINES = 400
 		window.todolaw.onProgress((line) => {
@@ -140,6 +166,7 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 		go.addEventListener('click', async () => {
 			go.disabled = true
 			back.disabled = true
+			adoptBox.style.display = 'none'
 			status.className = 'muted'
 			status.textContent = t('install.working', loc)
 			progressEl.style.display = 'block'
@@ -170,6 +197,7 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 			} else {
 				status.className = 'bad'
 				status.textContent = await errorText(res.code ?? 'generic', res.detail, loc)
+				if (res.code === 'other-home' && res.detail) offerAdoption(res.detail)
 				go.disabled = false
 				back.disabled = false
 			}

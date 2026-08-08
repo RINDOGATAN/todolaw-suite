@@ -31,6 +31,26 @@ export type GuardResult =
 	| { ok: false; code: 'other-home' | 'previous-install'; detail: string }
 
 /**
+ * The one-home guard's discovery step: the working_dir labels of every container in
+ * project "todolaw-suite", reduced to the first folder that is not our install home.
+ * Read-only; shared by checkGuards (to refuse) and the adopt flow (to take over).
+ */
+export async function discoverForeignHome(
+	home: string,
+	runner: Runner = runDocker
+): Promise<string | null> {
+	const labels = await runner([
+		'ps',
+		'-a',
+		'--filter',
+		`label=com.docker.compose.project=${PROJECT_NAME}`,
+		'--format',
+		'{{.Label "com.docker.compose.project.working_dir"}}'
+	])
+	return findForeignHome(parseLines(labels.stdout), home)
+}
+
+/**
  * The suite.sh safety guards, in suite.sh's order (check_home runs inside
  * check_docker, before ensure_env's previous-install check):
  *
@@ -38,7 +58,9 @@ export type GuardResult =
  *    com.docker.compose.project.working_dir label is NOT our install home means the
  *    suite already lives in another folder (e.g. a source-built production install).
  *    Refuse and point at that folder; every mutating action must pass this first so
- *    this app can never adopt — or stop — someone else's install.
+ *    this app never reconfigures — or stops — an install it wasn't pointed at. The
+ *    ONLY way past is the explicit adopt flow (suite:adopt), which re-points the
+ *    app's install home at that folder instead of touching it from this one.
  * 2. Previous-install guard — suite data volumes exist but no .env holds their
  *    passwords: block with a clear choice (restore the saved .env, or remove the
  *    old volumes) instead of stranding the data behind fresh random passwords.
@@ -50,15 +72,7 @@ export async function checkGuards(
 	envExists: boolean,
 	runner: Runner = runDocker
 ): Promise<GuardResult> {
-	const labels = await runner([
-		'ps',
-		'-a',
-		'--filter',
-		`label=com.docker.compose.project=${PROJECT_NAME}`,
-		'--format',
-		'{{.Label "com.docker.compose.project.working_dir"}}'
-	])
-	const foreign = findForeignHome(parseLines(labels.stdout), home)
+	const foreign = await discoverForeignHome(home, runner)
 	if (foreign) return { ok: false, code: 'other-home', detail: foreign }
 
 	if (!envExists) {

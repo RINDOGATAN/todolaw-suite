@@ -135,6 +135,18 @@ export const STRINGS = {
 		en: 'The suite already lives in another folder on this computer: {detail}. One computer runs one copy of the suite, from one folder — use that one. (Moving the install? Stop and remove the old folder’s containers first.)',
 		es: 'La suite ya vive en otra carpeta de este ordenador: {detail}. Un ordenador ejecuta una sola copia de la suite, desde una sola carpeta; usa esa. (¿Quieres mover la instalación? Antes para y elimina los contenedores de la carpeta antigua.)'
 	},
+	'adopt.offer': {
+		en: 'Good news: this app can simply use that install. Nothing is moved or changed — your settings, data and backups stay in that folder. No terminal needed.',
+		es: 'Buena noticia: esta aplicación puede usar esa instalación tal cual. No se mueve ni se cambia nada: tus ajustes, datos y copias de seguridad se quedan en esa carpeta. Sin terminal.'
+	},
+	'adopt.button': {
+		en: 'Use the install at {detail}',
+		es: 'Usar la instalación de {detail}'
+	},
+	'error.adoptNoEnv': {
+		en: "That folder ({detail}) has no settings file (.env), so this app cannot take it over — that file holds the passwords to its databases. Put the folder's .env back and try again.",
+		es: 'Esa carpeta ({detail}) no tiene archivo de ajustes (.env), así que esta aplicación no puede hacerse cargo de ella: ese archivo contiene las contraseñas de sus bases de datos. Vuelve a colocar el .env de esa carpeta e inténtalo de nuevo.'
+	},
 	'error.portsBusy': {
 		en: 'Another program on this computer is already using port(s) {detail}. The suite needs ports 8485, 8486 and 8487, and it refuses to fight over them. Quit the other program and try again.',
 		es: 'Otro programa de este ordenador ya está usando el puerto o puertos {detail}. La suite necesita los puertos 8485, 8486 y 8487, y se niega a pelear por ellos. Cierra el otro programa e inténtalo de nuevo.'

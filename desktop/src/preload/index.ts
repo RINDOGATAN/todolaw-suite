@@ -13,6 +13,7 @@ const api = {
 	start: (): Promise<unknown> => ipcRenderer.invoke('suite:start'),
 	stop: (): Promise<unknown> => ipcRenderer.invoke('suite:stop'),
 	update: (): Promise<unknown> => ipcRenderer.invoke('suite:update'),
+	adoptHome: (): Promise<unknown> => ipcRenderer.invoke('suite:adopt'),
 	backup: (): Promise<unknown> => ipcRenderer.invoke('suite:backup'),
 	onProgress: (cb: (line: string) => void): void => {
 		ipcRenderer.on('suite:progress', (_e, line: string) => cb(line))

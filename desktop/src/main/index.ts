@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'node:path'
-import { createWriteStream, mkdirSync, rmSync } from 'node:fs'
+import { createWriteStream, existsSync, mkdirSync, rmSync } from 'node:fs'
 import { createGzip } from 'node:zlib'
 import { pipeline } from 'node:stream/promises'
 import { once } from 'node:events'
@@ -10,9 +10,11 @@ import { portsToProbe, busyPorts } from '../core/ports'
 import { createBackupCipher, backupFileName } from '../core/backup'
 import { isServiceUp } from '../core/state'
 import { APPS, DOCKER_DOWNLOAD_URL, appUrl, type AppInfo } from '../core/types'
-import { composeFilePath, suiteHome, backupsDir } from './paths'
+import { composeFilePath, suiteHome, setSuiteHome, backupsDir } from './paths'
+import { loadConfig, saveConfig } from './config'
+import { adoptDecision } from '../core/adopt'
 import { envExists, ensureEnvFile, readEnvValue } from './store'
-import { snapshot, checkGuards, type StackSnapshot } from './orchestrator'
+import { snapshot, checkGuards, discoverForeignHome, type StackSnapshot } from './orchestrator'
 import { runDocker, runDockerStreaming, spawnDocker } from './runner'
 import { isPortInUse } from './netcheck'
 
@@ -140,6 +142,30 @@ ipcMain.handle('suite:status', (): Promise<StackSnapshot> => snapshot(base()))
 
 ipcMain.handle('suite:home', () => suiteHome())
 
+/**
+ * Adopt the existing install the one-home guard discovered: persist its folder as
+ * our install home and re-point every derived path at it. The foreign folder is
+ * re-discovered here (never taken from the renderer), and only adopted if its .env
+ * is present — that file holds the passwords to its databases. Nothing in the
+ * adopted folder is written or moved.
+ */
+ipcMain.handle('suite:adopt', async (): Promise<ActionResult> => {
+	try {
+		const foreign = await discoverForeignHome(suiteHome())
+		const decision = adoptDecision(foreign, foreign ? existsSync(join(foreign, '.env')) : false)
+		if (!decision.ok) {
+			return decision.code === 'no-foreign'
+				? fail('generic', 'no other install found')
+				: fail('adopt-no-env', decision.detail)
+		}
+		saveConfig({ ...loadConfig(), suiteHome: decision.home })
+		setSuiteHome(decision.home)
+		return { ok: true }
+	} catch (err) {
+		return fail('generic', String(err))
+	}
+})
+
 ipcMain.handle('suite:install', async (): Promise<ActionResult> => {
 	try {
 		const pre = await preflight(true)
@@ -223,6 +249,9 @@ ipcMain.handle(
 )
 
 app.whenReady().then(() => {
+	// An adopted install home (a CLI kit outside ~/todo-law) persists across runs.
+	const cfg = loadConfig()
+	if (cfg.suiteHome) setSuiteHome(cfg.suiteHome)
 	createWindow()
 })
 

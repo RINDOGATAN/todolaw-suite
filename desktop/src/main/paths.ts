@@ -7,8 +7,19 @@ import { homedir } from 'node:os'
  * desktop app and the kit share one install: the .env lives here, compose runs with
  * --project-directory pointing here, and backups land in backups/ under it. If a
  * CLI-kit .env already exists we adopt it (store.ts never overwrites).
+ *
+ * Default is ~/todo-law, but a CLI kit installed anywhere else can be adopted: the
+ * chosen folder persists in the app config and overrides the default here, so every
+ * derived path (compose base args, .env, backups) follows it unchanged.
  */
-export const suiteHome = (): string => join(homedir(), 'todo-law')
+let homeOverride: string | null = null
+
+/** Point the install home at an adopted folder (null restores the default). */
+export const setSuiteHome = (dir: string | null): void => {
+	homeOverride = dir
+}
+
+export const suiteHome = (): string => homeOverride ?? join(homedir(), 'todo-law')
 
 /** The chmod-600 .env docker compose reads from the project directory. */
 export const envPath = (): string => join(suiteHome(), '.env')
