@@ -122,7 +122,6 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 			</div>
 			<p id="status"></p>
 			<div id="adopt" class="step" style="display:none"></div>
-			<div id="pp" class="passphrase-box" style="display:none"></div>
 			<pre id="progress" class="progress" style="display:none"></pre>
 		`
 		const status = el.querySelector('#status') as HTMLElement
@@ -174,23 +173,6 @@ export function renderWizard(root: HTMLElement, locale: Locale, onDone: () => vo
 			if (res.ok) {
 				status.className = 'ok'
 				status.textContent = t('install.done', loc)
-				// Show the workspace passphrase the install just minted: browsers
-				// will ask for it before sign-in, so the operator must see it once.
-				const pp = await window.todolaw.passphrase()
-				if (pp) {
-					const box = el.querySelector('#pp') as HTMLElement
-					box.style.display = 'flex'
-					box.innerHTML = `<span class="pp-title">🔑 ${t('install.passphraseTitle', loc)}</span>
-						<div class="pp-row"><code>${pp}</code>
-							<button class="pp-copy" id="pp-copy">${t('install.passphraseCopy', loc)}</button>
-							<span class="pp-copied" id="pp-copied" style="display:none">${t('install.passphraseCopied', loc)}</span>
-						</div>
-						<span class="muted">${t('install.passphraseNote', loc)}</span>`
-					box.querySelector('#pp-copy')!.addEventListener('click', () => {
-						void navigator.clipboard.writeText(pp)
-						;(box.querySelector('#pp-copied') as HTMLElement).style.display = 'inline'
-					})
-				}
 				step = 'welcome' // reset for a future fresh install on this machine
 				stopPolling()
 				done()

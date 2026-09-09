@@ -210,12 +210,6 @@ BRIDGE_API_KEY=$(openssl rand -hex 24)
 # Encrypts ./suite.sh backup files. You need this exact value to restore on
 # another computer. Keep a copy somewhere safe (e.g. your password manager).
 BACKUP_PASSPHRASE=$(openssl rand -base64 24)
-
-# Asked once per browser before anyone can sign in to the apps. A speed bump
-# against casual snooping on this computer (the real protection is your
-# computer's own login + disk encryption). Show or change it any time:
-#   ./suite.sh passphrase        (blank it out to disable the gate)
-WORKSPACE_PASSPHRASE=$(openssl rand -hex 2)-$(openssl rand -hex 2)-$(openssl rand -hex 2)
 EOF
   chmod 600 "$ENV_FILE"
   ok "Settings created (secrets generated locally, kept private in .env)."
@@ -287,14 +281,6 @@ gen_portal() {
   footer { margin-top:2.5rem; color:var(--mut); font-size:.85rem; }
   footer code { background:#e9edf1; border-radius:.3rem; padding:.1rem .4rem; font-size:.85em; color:var(--ink); }
   footer li { margin:.2rem 0 .2rem 1.2rem; }
-  .passcard { margin-top:1.5rem; background:var(--card); border:2px solid var(--accent);
-              border-radius:.75rem; padding:1.1rem 1.25rem; }
-  .passcard-title { font-weight:700; font-size:1.05rem; margin-bottom:.3rem; }
-  .passcard details { margin:.5rem 0; }
-  .passcard summary { cursor:pointer; color:var(--accent); font-weight:600; }
-  .passvalue { display:inline-block; margin-top:.4rem; font-size:1.3rem; letter-spacing:.08em;
-               background:#e9edf1; border-radius:.4rem; padding:.35rem .7rem; }
-  .passcard-hint { font-size:.82rem; color:var(--mut); margin-top:.3rem; }
 </style>
 </head>
 <body>
@@ -305,23 +291,6 @@ gen_portal() {
      Snapshot taken $gen_at. Refresh any time with <code>./suite.sh portal</code>.</p>
 </header>
 EOF
-
-  # Workspace passphrase card — the one thing every user must know before the
-  # apps will let them sign in. The value stays behind a click (details/summary,
-  # no JS): this file lives beside .env, so it reveals nothing .env doesn't,
-  # but it should not be readable over a shoulder or in a screenshot.
-  wp=$(env_value WORKSPACE_PASSPHRASE)
-  if [ -n "$wp" ]; then
-    cat >>"$out" <<EOF
-<div class="passcard">
-  <p class="passcard-title">&#128273; Workspace passphrase</p>
-  <p>Each browser asks for it <strong>once per app</strong> before sign-in.
-     <strong>Write it down</strong> or keep it in your password manager.</p>
-  <details><summary>Click to reveal</summary><code class="passvalue">$wp</code></details>
-  <p class="passcard-hint">See it any time in Terminal: <code>./suite.sh passphrase</code></p>
-</div>
-EOF
-  fi
 
   cat >>"$out" <<EOF
 <div class="cards">
@@ -425,26 +394,6 @@ cmd_up() {
   done
 
   MIN=$(( (SECONDS - START) / 60 )); SEC=$(( (SECONDS - START) % 60 ))
-  # The passphrase gets its own banner FIRST — it is the one thing a user must
-  # write down, and burying it in the info box means it gets missed.
-  wp=$(env_value WORKSPACE_PASSPHRASE)
-  if [ -n "$wp" ]; then
-    # Draw a 70-wide bordered line: leading "  |", the text, right-padded to 66, "|".
-    pbar() { printf '  %s|%s%-66s%s|%s\n' "$BOLD$YELLOW" "$RESET$BOLD" "$1" "$BOLD$YELLOW" "$RESET"; }
-    say ""
-    say "  ${BOLD}${YELLOW}+==================================================================+${RESET}"
-    pbar ""
-    pbar "   WRITE THIS DOWN - your workspace passphrase:"
-    pbar ""
-    pbar "        $wp"
-    pbar ""
-    pbar "   Each browser asks for it once, per app, before you sign in."
-    pbar "   Keep it in your password manager. See it again any time with:"
-    pbar "        ./suite.sh passphrase"
-    pbar "   (It is also on your portal page.)"
-    pbar ""
-    say "  ${BOLD}${YELLOW}+==================================================================+${RESET}"
-  fi
   say ""
   say "  +----------------------------------------------------------------------+"
   say "  |                                                                      |"
@@ -646,55 +595,10 @@ cmd_status() {
       printf '  %-14s %-26s %s\n' "$title" "http://localhost:$port" "${YELLOW}starting (HTTP $code)${RESET}"
     fi
   done
-  # Sign-in gate truth: warn loudly if .env and the running apps disagree
-  # (a passphrase everyone believes is on, silently off, is worse than none).
-  envpp=$(env_value WORKSPACE_PASSPHRASE)
-  runpp=$(docker inspect todolaw-suite-dpocentral-1 --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep -c '^WORKSPACE_PASSPHRASE=..*' || true)
   say ""
-  if [ -n "$envpp" ] && [ "${runpp:-0}" -ge 1 ]; then
-    ok "Sign-in gate: ON (workspace passphrase; see it with ./suite.sh passphrase)"
-  elif [ -n "$envpp" ]; then
-    warn "Sign-in gate: passphrase is set in .env but NOT active in the running apps."
-    warn "Run  ./suite.sh  once to apply it."
-  else
-    note "Sign-in gate: OFF (no workspace passphrase; add one: ./suite.sh passphrase --new)"
-  fi
   note "Kit: $KIT_VERSION (./suite.sh update refreshes the kit itself, then the apps)"
   gen_portal
   note "portal/index.html refreshed. That page shows this same picture."
-  say ""
-}
-
-cmd_passphrase() {
-  [ -f "$ENV_FILE" ] || die "The suite is not installed here yet. Run ./suite.sh first."
-  current=$(env_value WORKSPACE_PASSPHRASE)
-  case "${1:-}" in
-    --new)
-      newpass=$(openssl rand -hex 2)-$(openssl rand -hex 2)-$(openssl rand -hex 2)
-      if grep -q '^WORKSPACE_PASSPHRASE=' "$ENV_FILE"; then
-        sed -i.bak "s/^WORKSPACE_PASSPHRASE=.*/WORKSPACE_PASSPHRASE=$newpass/" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
-      else
-        printf '\nWORKSPACE_PASSPHRASE=%s\n' "$newpass" >>"$ENV_FILE"
-      fi
-      say ""
-      ok "New workspace passphrase:  ${BOLD}$newpass${RESET}"
-      note "Applying it to the running apps..."
-      check_docker
-      compose up -d >>"logs/suite.log" 2>&1 && ok "Done. Everyone signs in with the new passphrase from now on." \
-        || warn "Could not restart the apps; run ./suite.sh to apply it."
-      ;;
-    *)
-      say ""
-      if [ -n "$current" ]; then
-        say "  Workspace passphrase:  ${BOLD}$current${RESET}"
-        note "Asked once per browser before sign-in. Change it: ./suite.sh passphrase --new"
-        note "Disable the gate: blank the WORKSPACE_PASSPHRASE line in .env, then ./suite.sh"
-      else
-        say "  No workspace passphrase is set: sign-in is open to anyone at this computer."
-        note "Add one:  ./suite.sh passphrase --new"
-      fi
-      ;;
-  esac
   say ""
 }
 
@@ -715,7 +619,6 @@ usage() {
   say "  ./suite.sh backup              encrypted backup of each app's data"
   say "  ./suite.sh restore <app> <f>   restore one app from a backup file"
   say "  ./suite.sh status              show what is running"
-  say "  ./suite.sh passphrase [--new]  show (or change) the workspace passphrase"
   say "  ./suite.sh portal              regenerate portal/index.html (your bookmark page)"
 }
 
@@ -726,7 +629,6 @@ case "${1:-up}" in
   backup)  cmd_backup ;;
   restore) shift; cmd_restore "$@" ;;
   status)  cmd_status ;;
-  passphrase) shift; cmd_passphrase "$@" ;;
   portal)  cmd_portal ;;
   -h|--help|help) usage ;;
   *) say "Unknown command: $1"; say ""; usage; exit 1 ;;

@@ -129,21 +129,3 @@ button.secondary {
 	border-radius: 8px;
 	white-space: pre-wrap;
 }
-
-.passphrase-box {
-	margin-top: 1.1rem; padding: 1.1rem 1.25rem; border: 2px solid #0a84ff;
-	background: #f0f7ff; border-radius: 10px;
-	display: flex; flex-direction: column; gap: 0.5rem;
-}
-.passphrase-box .pp-title { font-weight: 700; font-size: 1.05rem; }
-.passphrase-box .pp-row { display: flex; align-items: center; gap: 0.6rem; }
-.passphrase-box code {
-	font-size: 1.5rem; letter-spacing: 0.08em; font-weight: 600;
-	background: #fff; border: 1px solid #cfe2ff; border-radius: 6px;
-	padding: 0.3rem 0.7rem;
-}
-.passphrase-box .pp-copy {
-	font-size: 0.85rem; padding: 0.35rem 0.7rem; background: #0a84ff;
-}
-.passphrase-box .pp-copied { color: #1e7d45; font-weight: 600; font-size: 0.85rem; }
-.passphrase-box .muted { font-size: 0.85rem; }
