@@ -70,9 +70,48 @@ gh release create desktop-v<version> "dist/TODO.LAW Suite-<version>-arm64.dmg" \
   -n "Signed + notarized macOS app. Installs and operates the self-hosted suite with no terminal."
 ```
 
+**Normalise the asset name (every release, right after the upload).** The DMG
+is built as `TODO.LAW Suite-<version>-arm64.dmg`, with a space. GitHub rewrites
+that space on upload, and it has not been consistent about it: desktop-v0.1.4
+came out hyphenated (`TODO.LAW-Suite-0.1.4-arm64.dmg`), desktop-v0.1.5 came out
+with a period. The website hard-codes the hyphenated form, so an un-normalised
+asset gives every visitor a 404 on the download button. Fix it in place rather
+than re-uploading:
+
+```bash
+ASSET_ID=$(gh api /repos/RINDOGATAN/todolaw-suite/releases/tags/desktop-v<version> \
+  --jq '.assets[] | select(.name | endswith(".dmg")) | .id')
+gh api --method PATCH "/repos/RINDOGATAN/todolaw-suite/releases/assets/$ASSET_ID" \
+  -f name="TODO.LAW-Suite-<version>-arm64.dmg" --jq '.name'
+curl -sIL -o /dev/null -w '%{http_code}\n' \
+  "https://github.com/RINDOGATAN/todolaw-suite/releases/download/desktop-v<version>/TODO.LAW-Suite-<version>-arm64.dmg"
+```
+
+The curl must print 200 before you touch the website.
+
 Then, and only then, add the **Download for Mac** button to `/firms` and
 `/deploy` (app = Option A, the one-liner = Option B) and mention it in
-llms.txt. Never link an unsigned build.
+llms.txt. Never link an unsigned build. The button URL lives in `MAC_DMG_URL`
+at the top of `src/pages/Firms.tsx` and `src/pages/Deploy.tsx` in the site repo
+(`~/NEL/todolaw`); a kit tag additionally needs `KIT_URL` in
+`~/NEL/todolaw/public/install.sh`. Pushing main deploys.
+
+**Checking the deploy landed.** `public/install.sh` is a static file, so
+`curl -sL https://todo.law/install.sh | grep KIT_URL` tells you at once. The
+buttons are harder: the pages are lazy-loaded, hash-named chunks, and the live
+hashes will NOT match a local `npm run build`. Resolve them from the live
+entry bundle instead of guessing:
+
+```bash
+curl -sL https://todo.law/deploy | grep -o 'assets/[A-Za-z0-9._-]*\.js'   # entry bundle
+curl -sL https://todo.law/assets/<entry>.js | grep -o 'Deploy-[A-Za-z0-9_-]*\.js'
+curl -sL https://todo.law/assets/<page-chunk>.js | grep -o 'TODO\.LAW-Suite-[0-9.]*-arm64\.dmg'
+```
+
+`/es/*` runs off the same root entry bundle, so it is covered by the same
+check. `/startups` is a separate mini-app with its own same-named `Firms-*`
+chunk that carries no download URL: ignore it, and do not read its 404 under
+`/assets/` as a broken page.
 
 ## Verification protocol
 
