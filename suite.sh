@@ -49,7 +49,7 @@ DEFAULT_VERSION="latest"
 # (bump on every kit release). `update` compares it against the tag pinned in
 # todo.law/install.sh (the same pin fresh installs get) and refreshes the kit
 # first, so fixes to suite.sh itself reach existing installs, not only new ones.
-KIT_VERSION="v0.1.12"
+KIT_VERSION="v0.1.13"
 INSTALLER_URL="https://todo.law/install.sh"
 
 # --- remembered settings (.suite-config) -------------------------------------
