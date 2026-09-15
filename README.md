@@ -102,8 +102,12 @@ the box.
 > them *first*.
 
 **All data stays on this computer**, in Docker's storage. Nothing is sent to
-any cloud. Your settings and secret keys live in the **`.env`** file next to
-this script. The script creates it once and never overwrites it.
+any cloud unless you choose to connect an external AI engine (see "What about
+AI features?" below); the only outbound traffic otherwise is downloading the
+apps and kit updates. This describes the self-hosted kit; the hosted cloud
+service has its own posture. Your settings and secret keys live in the
+**`.env`** file next to this script. The script creates it once and never
+overwrites it.
 
 ## Everyday commands
 
@@ -160,7 +164,8 @@ once; there is deliberately no magic merge.
 ## For the technically inclined: the raw one-liner
 
 `suite.sh` is a friendly wrapper. Under the hood the kit is a single
-`docker-compose.yml` that pulls pinned, prebuilt images from GHCR
+`docker-compose.yml` that pulls prebuilt images from GHCR (`latest` by
+default; set `TODOLAW_VERSION` in `.env` to pin one release)
 (`ghcr.io/rindogatan/{dpocentral,deal-room,aisentinel}` + their `-migrator`
 images). If you would rather drive Docker yourself:
 

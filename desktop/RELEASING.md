@@ -89,11 +89,13 @@ curl -sIL -o /dev/null -w '%{http_code}\n' \
 
 The curl must print 200 before you touch the website.
 
-Then, and only then, add the **Download for Mac** button to `/firms` and
-`/deploy` (app = Option A, the one-liner = Option B) and mention it in
-llms.txt. Never link an unsigned build. The button URL lives in `MAC_DMG_URL`
-at the top of `src/pages/Firms.tsx` and `src/pages/Deploy.tsx` in the site repo
-(`~/NEL/todolaw`); a kit tag additionally needs `KIT_URL` in
+Then, and only then, add the **Download for Mac** button to `/run` (the four
+ways page of storefront v3; the old `/firms` and `/deploy` pages redirect there
+permanently since 2026-09-15) and mention it in llms.txt. Never link an
+unsigned build. The button URL is the `MAC_DMG_URL` constant in the site repo
+(`~/NEL/todolaw`; before storefront v3 it sat at the top of
+`src/pages/Firms.tsx` and `src/pages/Deploy.tsx`, so re-check where the `/run`
+page keeps it); a kit tag additionally needs `KIT_URL` in
 `~/NEL/todolaw/public/install.sh`. Pushing main deploys.
 
 **Checking the deploy landed.** `public/install.sh` is a static file, so
@@ -103,15 +105,14 @@ hashes will NOT match a local `npm run build`. Resolve them from the live
 entry bundle instead of guessing:
 
 ```bash
-curl -sL https://todo.law/deploy | grep -o 'assets/[A-Za-z0-9._-]*\.js'   # entry bundle
-curl -sL https://todo.law/assets/<entry>.js | grep -o 'Deploy-[A-Za-z0-9_-]*\.js'
+curl -sL https://todo.law/run | grep -o 'assets/[A-Za-z0-9._-]*\.js'   # entry bundle
+curl -sL https://todo.law/assets/<entry>.js | grep -o '[A-Za-z]*-[A-Za-z0-9_-]*\.js'   # find the /run page chunk
 curl -sL https://todo.law/assets/<page-chunk>.js | grep -o 'TODO\.LAW-Suite-[0-9.]*-arm64\.dmg'
 ```
 
-`/es/*` runs off the same root entry bundle, so it is covered by the same
-check. `/startups` is a separate mini-app with its own same-named `Firms-*`
-chunk that carries no download URL: ignore it, and do not read its 404 under
-`/assets/` as a broken page.
+`/es/*` (the Spanish page is `/es/a-tu-manera`) runs off the same root entry
+bundle, so it is covered by the same check. The old `/startups` mini-app is
+gone: `/startups` now redirects to `/`.
 
 ## Verification protocol
 
