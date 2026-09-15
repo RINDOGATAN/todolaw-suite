@@ -199,7 +199,8 @@ DPO_DB_PASSWORD=$(openssl rand -hex 24)
 DEAL_DB_PASSWORD=$(openssl rand -hex 24)
 AIS_DB_PASSWORD=$(openssl rand -hex 24)
 
-# Session signing secret shared by the apps.
+# One login for the suite: the three apps sign their sessions with this ONE
+# secret, so signing in on any of them signs you in on the other two.
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
 
 # Cross-app bridge: the SAME key on DPO Central + AI Sentinel turns on the
@@ -403,8 +404,8 @@ cmd_up() {
   say "  |   Dealroom      http://localhost:8486   deal negotiation             |"
   say "  |   AI Sentinel   http://localhost:8487   AI governance                |"
   say "  |                                                                      |"
-  say "  |   Sign in on each with your email address (first sign-in creates     |"
-  say "  |   your account: local only, no cloud).                               |"
+  say "  |   Sign in ONCE with your email address: the three apps share one     |"
+  say "  |   login (first sign-in creates your account: local only, no cloud).  |"
   say "  |                                                                      |"
   say "  |   IMPORTANT. About that sign-in: it accepts ANY email address.       |"
   say "  |   That is safe ONLY because everything binds to this computer        |"

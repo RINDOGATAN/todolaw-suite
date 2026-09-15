@@ -86,12 +86,16 @@ on (in a small `.suite-config` file in the kit's folder).
 | **Dealroom** | Structured rooms for negotiating and signing deals and contracts. | <http://localhost:8486> |
 | **AI Sentinel** | A register and assessment tool for the AI systems your organisation uses. | <http://localhost:8487> |
 
-Sign in on each with your email address. The first sign-in creates your
-account, locally, with no email being sent anywhere. Your email is your
-identity: it names you on approvals, audit trails and licences, so each
-person signs in as themselves. The three apps share one network, so DPO
-Central and AI Sentinel light up their **unified DPIA + AI-Act view** out of
-the box.
+**One login for the suite.** Sign in once, on any of the three, with your
+email address; the other two accept that session, so you move between them
+without signing in again. The first sign-in creates your account, locally,
+with no email being sent anywhere. Your email is your identity: it names you
+on approvals, audit trails and licences, so each person signs in as
+themselves. This works because the three apps sign their sessions with one
+secret (`NEXTAUTH_SECRET` in your `.env`, generated on first run) and all
+answer on this computer (localhost). The three apps also share one network,
+so DPO Central and AI Sentinel light up their **unified DPIA + AI-Act view**
+out of the box.
 
 > **⚠ What actually protects your data.**
 > The suite answers to this computer alone (localhost) — nobody on the

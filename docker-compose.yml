@@ -15,6 +15,19 @@ name: todolaw-suite
 
 x-restart: &restart unless-stopped
 
+# One login for the suite. The three apps sign their sessions with ONE secret
+# and all answer on the same host name (localhost), so a session minted by any
+# of them is accepted by the other two: sign in once, open the other apps
+# without signing in again (each app creates your local account on first
+# sight of the session, keyed by your email). NEXTAUTH_SECRET is generated
+# by suite.sh / the desktop app / todo.law's install.sh on first run; there is
+# deliberately no default. AUTH_COOKIE_DOMAIN stays empty on localhost; set it
+# (e.g. ".suite.example.com") only when a reverse proxy serves the three apps
+# under one domain, so the session cookie is shared across sub-domains.
+x-shared-login: &shared-login
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+  AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+
 services:
   # ------------------------------------------------------------------ databases
   dpo-db:
@@ -106,7 +119,7 @@ services:
     environment:
       DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
       NEXTAUTH_URL: http://localhost:8485
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      <<: *shared-login
       # Optional AI engine (see .env.example). Even when set, the apps make no
       # AI calls until an administrator also enables the AI posture in-app.
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
@@ -146,7 +159,7 @@ services:
       DATABASE_URL: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       NEXTAUTH_URL: http://localhost:8486
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      <<: *shared-login
       # Optional AI engine (see .env.example). Even when set, the apps make no
       # AI calls until an administrator also enables the AI posture in-app.
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
@@ -176,7 +189,7 @@ services:
       ais_DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       NEXTAUTH_URL: http://localhost:8487
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      <<: *shared-login
       # Optional AI engine (see .env.example). Even when set, the apps make no
       # AI calls until an administrator also enables the AI posture in-app.
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
