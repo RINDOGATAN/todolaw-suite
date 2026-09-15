@@ -1,0 +1,5 @@
+todo.law suite kit: GNU Affero General Public License v3 or later (see LICENSE). The kit holds no application code; it runs prebuilt images of three separate works, each licensed AGPL-3.0-or-later in its own repository:
+  DPO Central   https://github.com/RINDOGATAN/dpocentral   (image ghcr.io/rindogatan/dpocentral, + -migrator)
+  Dealroom      https://github.com/RINDOGATAN/deal-room    (image ghcr.io/rindogatan/deal-room, + -migrator)
+  AI Sentinel   https://github.com/RINDOGATAN/aisentinel   (image ghcr.io/rindogatan/aisentinel, + -migrator)
+The desktop app in desktop/ is a separate work under the Apache License 2.0 (desktop/LICENSE, desktop/NOTICES.md).

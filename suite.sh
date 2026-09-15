@@ -41,16 +41,19 @@ ENV_FILE="$HERE/.env"
 COMPOSE_FILE="$HERE/docker-compose.yml"
 DOCKER_LINK="https://www.docker.com/products/docker-desktop/"
 
-# The version (image tag) to run. Kept in .env so `update` can change it;
-# defaults to "latest" so the suite always pulls the newest published images.
-DEFAULT_VERSION="latest"
-
 # This kit's own release tag — MUST match the git tag this file ships in
 # (bump on every kit release). `update` compares it against the tag pinned in
 # todo.law/install.sh (the same pin fresh installs get) and refreshes the kit
 # first, so fixes to suite.sh itself reach existing installs, not only new ones.
-KIT_VERSION="v0.1.13"
+KIT_VERSION="v0.1.14"
 INSTALLER_URL="https://todo.law/install.sh"
+
+# The app images a kit runs are pinned to the kit: docker-compose.yml falls
+# back to this same tag whenever TODOLAW_VERSION is empty in .env (the default
+# a fresh install gets). A kit refresh therefore moves the apps with it; a
+# value in .env (a tag, or "latest") overrides. RELEASING.md keeps the three
+# (kit tag, installer pin, image tags) moving together.
+DEFAULT_VERSION="$KIT_VERSION"
 
 # --- remembered settings (.suite-config) -------------------------------------
 if [ -n "${BRAND_NAME:-}" ]; then
@@ -99,6 +102,11 @@ die() {
   while [ $# -gt 0 ]; do printf '  %s\n' "$1"; shift; done
   printf '\n'; exit 1
 }
+
+# The compose file must pin the app images to this very kit (see RELEASING.md).
+# A mismatch means a half-finished kit release; warn, never block.
+grep -q "TODOLAW_VERSION:-$KIT_VERSION}" "$COMPOSE_FILE" 2>/dev/null \
+  || warn "docker-compose.yml does not pin the app images to this kit ($KIT_VERSION). See RELEASING.md."
 
 # --- prerequisite checks (Docker only: nothing to build, nothing to clone) --
 check_docker() {
@@ -190,16 +198,18 @@ ensure_env() {
 # Keep this file: it holds the keys to your local databases and backups.
 # To move to another computer, copy this file across BEFORE running ./suite.sh.
 
-# Which release to run. "latest" always pulls the newest published images;
-# pin a version (e.g. v0.1.1) for a reproducible install.
-TODOLAW_VERSION=$DEFAULT_VERSION
+# Which release of the apps to run. Empty = the release this kit was made for
+# ($DEFAULT_VERSION today; ./suite.sh update moves it with the kit). Set a tag to
+# pin another release, or "latest" to always pull the newest published images.
+TODOLAW_VERSION=
 
 # Database passwords (used only inside this stack).
 DPO_DB_PASSWORD=$(openssl rand -hex 24)
 DEAL_DB_PASSWORD=$(openssl rand -hex 24)
 AIS_DB_PASSWORD=$(openssl rand -hex 24)
 
-# Session signing secret shared by the apps.
+# One login for the suite: the three apps sign their sessions with this ONE
+# secret, so signing in on any of them signs you in on the other two.
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
 
 # Cross-app bridge: the SAME key on DPO Central + AI Sentinel turns on the
@@ -403,8 +413,8 @@ cmd_up() {
   say "  |   Dealroom      http://localhost:8486   deal negotiation             |"
   say "  |   AI Sentinel   http://localhost:8487   AI governance                |"
   say "  |                                                                      |"
-  say "  |   Sign in on each with your email address (first sign-in creates     |"
-  say "  |   your account: local only, no cloud).                               |"
+  say "  |   Sign in ONCE with your email address: the three apps share one     |"
+  say "  |   login (first sign-in creates your account: local only, no cloud).  |"
   say "  |                                                                      |"
   say "  |   IMPORTANT. About that sign-in: it accepts ANY email address.       |"
   say "  |   That is safe ONLY because everything binds to this computer        |"
@@ -512,7 +522,7 @@ cmd_update() {
   else
     warn "Restart failed. See logs/suite.log"
   fi
-  note "Pinned to a specific version? Edit TODOLAW_VERSION in .env, then ./suite.sh update."
+  note "Apps follow the kit ($DEFAULT_VERSION) unless TODOLAW_VERSION is set in .env (a tag, or latest); then ./suite.sh update."
   gen_portal
   say ""
 }

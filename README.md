@@ -86,12 +86,16 @@ on (in a small `.suite-config` file in the kit's folder).
 | **Dealroom** | Structured rooms for negotiating and signing deals and contracts. | <http://localhost:8486> |
 | **AI Sentinel** | A register and assessment tool for the AI systems your organisation uses. | <http://localhost:8487> |
 
-Sign in on each with your email address. The first sign-in creates your
-account, locally, with no email being sent anywhere. Your email is your
-identity: it names you on approvals, audit trails and licences, so each
-person signs in as themselves. The three apps share one network, so DPO
-Central and AI Sentinel light up their **unified DPIA + AI-Act view** out of
-the box.
+**One login for the suite.** Sign in once, on any of the three, with your
+email address; the other two accept that session, so you move between them
+without signing in again. The first sign-in creates your account, locally,
+with no email being sent anywhere. Your email is your identity: it names you
+on approvals, audit trails and licences, so each person signs in as
+themselves. This works because the three apps sign their sessions with one
+secret (`NEXTAUTH_SECRET` in your `.env`, generated on first run) and all
+answer on this computer (localhost). The three apps also share one network,
+so DPO Central and AI Sentinel light up their **unified DPIA + AI-Act view**
+out of the box.
 
 > **⚠ What actually protects your data.**
 > The suite answers to this computer alone (localhost) — nobody on the
@@ -135,8 +139,12 @@ Installed from a kit older than v0.1.12? Your `suite.sh` predates the
 self-refresh — run the install one-liner from todo.law once more; it refreshes
 the kit in place and never touches `.env`, your settings, or your data.
 
-Want a fixed, reproducible version instead of always-latest? Edit
-`TODOLAW_VERSION` in `.env` (e.g. `v0.1.1`), then `./suite.sh update`.
+Which version of the apps do you get? The one this kit was released with: each
+kit release pins the three app images to its own version tag, and a kit refresh
+moves that pin, so kit and apps always move together. To follow the newest
+published images instead, or to stay on one older release, set
+`TODOLAW_VERSION` in `.env` (to `latest`, or to a tag such as `v0.1.13`), then
+`./suite.sh update`. Leave it empty to follow the kit.
 
 ## Backups, and moving to another computer
 
@@ -164,8 +172,9 @@ once; there is deliberately no magic merge.
 ## For the technically inclined: the raw one-liner
 
 `suite.sh` is a friendly wrapper. Under the hood the kit is a single
-`docker-compose.yml` that pulls prebuilt images from GHCR (`latest` by
-default; set `TODOLAW_VERSION` in `.env` to pin one release)
+`docker-compose.yml` that pulls prebuilt images from GHCR (pinned to the kit's
+own version tag by default; set `TODOLAW_VERSION` in `.env` to another tag or
+to `latest`)
 (`ghcr.io/rindogatan/{dpocentral,deal-room,aisentinel}` + their `-migrator`
 images). If you would rather drive Docker yourself:
 
@@ -178,8 +187,9 @@ docker compose up -d      # pulls images, migrates, starts all three
 ```
 
 Ports: DPO Central `8485`, Dealroom `8486`, AI Sentinel `8487`. Data lives in
-named Docker volumes and survives restarts and version bumps. To upgrade, bump
-`TODOLAW_VERSION` in `.env` and `docker compose up -d` again. Everything binds
+named Docker volumes and survives restarts and version bumps. To upgrade, pull
+the newer kit (its compose file carries the newer pin) or set `TODOLAW_VERSION`
+in `.env`, and `docker compose up -d` again. Everything binds
 to `127.0.0.1`. Put a reverse proxy with real auth in front before exposing
 it anywhere.
 
@@ -204,6 +214,25 @@ see `.env.example` for recipes), *and* an administrator switches it on inside
 the app, with their name recorded. Leave it off and the products stay fully
 deterministic. Every AI draft is labelled and lands only where a human
 reviews and saves it.
+
+**What is "the community engine"?**
+Donna (a legal assistant) running on LQ.AI (an AI engine), both from the
+open community project the suite contributes to. The kit includes them
+behind the `community` profile, because they are heavy (an AI engine plus its
+models: count on tens of gigabytes of disk and a machine with plenty of
+memory; check the upstream project's requirements before switching it on).
+Nothing starts until you ask for it:
+
+```bash
+docker compose --profile community up -d
+```
+
+Before the first start, set `LQAI_IMAGE` and `DONNA_IMAGE` in `.env` to the
+pinned image references of the upstream release you want (they are listed in
+the upstream release compose file). The defaults are deliberately not
+pullable, so the profile refuses to start until both are set; nothing floats
+to an unpinned version. Donna then answers on <http://localhost:8488> and
+LQ.AI on <http://localhost:8489>, on this computer only, like the three apps.
 
 **Can my colleagues on the office network use it?**
 Out of the box, no. The suite only answers on the computer it runs on, which

@@ -9,11 +9,31 @@
 # The three apps share a network, so DPO Central reaches AI Sentinel by service
 # name (no host.docker.internal) — the cross-app "one system, both regimes" view
 # works out of the box. Data lives in named volumes and survives restarts and
-# version bumps. To upgrade: bump TODOLAW_VERSION in .env, then `up -d`.
+# version bumps.
+#
+# Pinned together (safeguard 7, see RELEASING.md): every app image below falls
+# back to the SAME tag as KIT_VERSION in suite.sh, so a given kit always runs
+# the app images it was released with. Leave TODOLAW_VERSION empty in .env to
+# follow the kit; set it (a tag, or "latest") to override. To upgrade a pinned
+# install: `./suite.sh update` (refreshes the kit, so the pin moves), or bump
+# TODOLAW_VERSION in .env, then `up -d`.
 
 name: todolaw-suite
 
 x-restart: &restart unless-stopped
+
+# One login for the suite. The three apps sign their sessions with ONE secret
+# and all answer on the same host name (localhost), so a session minted by any
+# of them is accepted by the other two: sign in once, open the other apps
+# without signing in again (each app creates your local account on first
+# sight of the session, keyed by your email). NEXTAUTH_SECRET is generated
+# by suite.sh / the desktop app / todo.law's install.sh on first run; there is
+# deliberately no default. AUTH_COOKIE_DOMAIN stays empty on localhost; set it
+# (e.g. ".suite.example.com") only when a reverse proxy serves the three apps
+# under one domain, so the session cookie is shared across sub-domains.
+x-shared-login: &shared-login
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+  AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
 
 services:
   # ------------------------------------------------------------------ databases
@@ -62,7 +82,7 @@ services:
   # ------------------------------------------------------- migrators (one-shot)
   # Apply the migrations history + first-boot seed, then exit. Safe to re-run.
   dpo-migrator:
-    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-v0.1.14}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -72,7 +92,7 @@ services:
       DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
 
   deal-migrator:
-    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-v0.1.14}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -84,7 +104,7 @@ services:
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
 
   ais-migrator:
-    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-v0.1.14}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -97,7 +117,7 @@ services:
 
   # ------------------------------------------------------------------- the apps
   dpocentral:
-    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-v0.1.14}
     restart: *restart
     ports: ["127.0.0.1:8485:3001"]
     depends_on:
@@ -106,7 +126,7 @@ services:
     environment:
       DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
       NEXTAUTH_URL: http://localhost:8485
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      <<: *shared-login
       # Optional AI engine (see .env.example). Even when set, the apps make no
       # AI calls until an administrator also enables the AI posture in-app.
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
@@ -136,7 +156,7 @@ services:
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   dealroom:
-    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-v0.1.14}
     restart: *restart
     ports: ["127.0.0.1:8486:3000"]
     depends_on:
@@ -146,7 +166,7 @@ services:
       DATABASE_URL: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
       NEXTAUTH_URL: http://localhost:8486
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      <<: *shared-login
       # Optional AI engine (see .env.example). Even when set, the apps make no
       # AI calls until an administrator also enables the AI posture in-app.
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
@@ -166,7 +186,7 @@ services:
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
-    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-v0.1.14}
     restart: *restart
     ports: ["127.0.0.1:8487:3003"]
     depends_on:
@@ -176,7 +196,7 @@ services:
       ais_DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       DATABASE_URL: postgresql://aisentinel:${AIS_DB_PASSWORD}@ais-db:5432/aisentinel
       NEXTAUTH_URL: http://localhost:8487
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      <<: *shared-login
       # Optional AI engine (see .env.example). Even when set, the apps make no
       # AI calls until an administrator also enables the AI posture in-app.
       LLM_GATEWAY_URL: ${LLM_GATEWAY_URL:-}
@@ -207,8 +227,40 @@ services:
     restart: *restart
     volumes: ["ollama-models:/root/.ollama"]
 
+  # ------------------------------------------ the community engine (optional)
+  # Donna (the legal assistant) on LQ.AI (the engine), both from the community
+  # project the suite contributes to (github.com/LegalQuants). They are heavy
+  # (an AI engine and its models), so they sit behind a profile and are
+  # started ONLY with:  docker compose --profile community up -d
+  # Both bind to this computer alone, like the three apps.
+  #
+  # The images are pinned in .env (LQAI_IMAGE, DONNA_IMAGE): copy the exact
+  # image references from the upstream release compose file
+  # (docker-compose.release in each upstream repository) for the version you
+  # want. The defaults below are deliberately NOT pullable, so the profile
+  # refuses to start until a real, pinned image is set: nothing floats.
+  lqai:
+    image: ${LQAI_IMAGE:-ghcr.io/legalquants/lq-ai:set-LQAI_IMAGE-in-.env}
+    profiles: ["community"]
+    restart: *restart
+    ports: ["127.0.0.1:${LQAI_PORT:-8489}:${LQAI_CONTAINER_PORT:-8000}"]
+    volumes: ["lqai-data:/data"]
+
+  donna:
+    image: ${DONNA_IMAGE:-ghcr.io/legalquants/donna:set-DONNA_IMAGE-in-.env}
+    profiles: ["community"]
+    restart: *restart
+    depends_on: [lqai]
+    ports: ["127.0.0.1:${DONNA_PORT:-8488}:${DONNA_CONTAINER_PORT:-3000}"]
+    environment:
+      # The engine by service name on the shared network.
+      LQAI_URL: http://lqai:${LQAI_CONTAINER_PORT:-8000}
+    volumes: ["donna-data:/data"]
+
 volumes:
   dpo-data:
   deal-data:
   ais-data:
   ollama-models:
+  lqai-data:
+  donna-data:
