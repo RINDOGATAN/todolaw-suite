@@ -220,8 +220,40 @@ services:
     restart: *restart
     volumes: ["ollama-models:/root/.ollama"]
 
+  # ------------------------------------------ the community engine (optional)
+  # Donna (the legal assistant) on LQ.AI (the engine), both from the community
+  # project the suite contributes to (github.com/LegalQuants). They are heavy
+  # (an AI engine and its models), so they sit behind a profile and are
+  # started ONLY with:  docker compose --profile community up -d
+  # Both bind to this computer alone, like the three apps.
+  #
+  # The images are pinned in .env (LQAI_IMAGE, DONNA_IMAGE): copy the exact
+  # image references from the upstream release compose file
+  # (docker-compose.release in each upstream repository) for the version you
+  # want. The defaults below are deliberately NOT pullable, so the profile
+  # refuses to start until a real, pinned image is set: nothing floats.
+  lqai:
+    image: ${LQAI_IMAGE:-ghcr.io/legalquants/lq-ai:set-LQAI_IMAGE-in-.env}
+    profiles: ["community"]
+    restart: *restart
+    ports: ["127.0.0.1:${LQAI_PORT:-8489}:${LQAI_CONTAINER_PORT:-8000}"]
+    volumes: ["lqai-data:/data"]
+
+  donna:
+    image: ${DONNA_IMAGE:-ghcr.io/legalquants/donna:set-DONNA_IMAGE-in-.env}
+    profiles: ["community"]
+    restart: *restart
+    depends_on: [lqai]
+    ports: ["127.0.0.1:${DONNA_PORT:-8488}:${DONNA_CONTAINER_PORT:-3000}"]
+    environment:
+      # The engine by service name on the shared network.
+      LQAI_URL: http://lqai:${LQAI_CONTAINER_PORT:-8000}
+    volumes: ["donna-data:/data"]
+
 volumes:
   dpo-data:
   deal-data:
   ais-data:
   ollama-models:
+  lqai-data:
+  donna-data:

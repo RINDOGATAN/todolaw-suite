@@ -209,6 +209,25 @@ the app, with their name recorded. Leave it off and the products stay fully
 deterministic. Every AI draft is labelled and lands only where a human
 reviews and saves it.
 
+**What is "the community engine"?**
+Donna (a legal assistant) running on LQ.AI (an AI engine), both from the
+open community project the suite contributes to. The kit includes them
+behind the `community` profile, because they are heavy (an AI engine plus its
+models: count on tens of gigabytes of disk and a machine with plenty of
+memory; check the upstream project's requirements before switching it on).
+Nothing starts until you ask for it:
+
+```bash
+docker compose --profile community up -d
+```
+
+Before the first start, set `LQAI_IMAGE` and `DONNA_IMAGE` in `.env` to the
+pinned image references of the upstream release you want (they are listed in
+the upstream release compose file). The defaults are deliberately not
+pullable, so the profile refuses to start until both are set; nothing floats
+to an unpinned version. Donna then answers on <http://localhost:8488> and
+LQ.AI on <http://localhost:8489>, on this computer only, like the three apps.
+
 **Can my colleagues on the office network use it?**
 Out of the box, no. The suite only answers on the computer it runs on, which
 is the safe default (sign-in is deliberately trusting because of it). Opening
