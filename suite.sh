@@ -45,7 +45,7 @@ DOCKER_LINK="https://www.docker.com/products/docker-desktop/"
 # (bump on every kit release). `update` compares it against the tag pinned in
 # todo.law/install.sh (the same pin fresh installs get) and refreshes the kit
 # first, so fixes to suite.sh itself reach existing installs, not only new ones.
-KIT_VERSION="v0.1.13"
+KIT_VERSION="v0.1.14"
 INSTALLER_URL="https://todo.law/install.sh"
 
 # The app images a kit runs are pinned to the kit: docker-compose.yml falls

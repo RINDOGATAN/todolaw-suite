@@ -82,7 +82,7 @@ services:
   # ------------------------------------------------------- migrators (one-shot)
   # Apply the migrations history + first-boot seed, then exit. Safe to re-run.
   dpo-migrator:
-    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-v0.1.13}
+    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-v0.1.14}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -92,7 +92,7 @@ services:
       DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
 
   deal-migrator:
-    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-v0.1.13}
+    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-v0.1.14}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -104,7 +104,7 @@ services:
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
 
   ais-migrator:
-    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-v0.1.13}
+    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-v0.1.14}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -117,7 +117,7 @@ services:
 
   # ------------------------------------------------------------------- the apps
   dpocentral:
-    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-v0.1.13}
+    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-v0.1.14}
     restart: *restart
     ports: ["127.0.0.1:8485:3001"]
     depends_on:
@@ -156,7 +156,7 @@ services:
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   dealroom:
-    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-v0.1.13}
+    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-v0.1.14}
     restart: *restart
     ports: ["127.0.0.1:8486:3000"]
     depends_on:
@@ -186,7 +186,7 @@ services:
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
-    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-v0.1.13}
+    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-v0.1.14}
     restart: *restart
     ports: ["127.0.0.1:8487:3003"]
     depends_on:
