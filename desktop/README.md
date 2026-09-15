@@ -20,14 +20,13 @@ npm run typecheck  # tsc --noEmit
 npm run dist       # bundle ../docker-compose.yml + build the .dmg (unsigned locally)
 ```
 
-## Status: M1 — unsigned
+## Status: signed and notarized releases
 
-This milestone produces a working, **unsigned** local build. The mac signing +
-notarization plumbing is kept in `electron-builder.yml` / `build/notarize-dmg.cjs`
-and no-ops without Apple credentials; the `notarize.teamId` is a TODO placeholder
-until we have a Developer ID.
-
-Scope doc: `suite-desktop-app-scope-2026-07-16.md`.
+Releases are published as signed and notarized DMGs (`desktop-vX.Y.Z` on GitHub;
+the ceremony is in `RELEASING.md`). A local `npm run dist` without the Apple
+credentials still produces a working but **unsigned** build: the signing and
+notarization plumbing in `electron-builder.yml` / `build/notarize-dmg.cjs` no-ops
+when no signing identity is present.
 
 ## Licensing
 
