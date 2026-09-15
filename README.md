@@ -139,8 +139,12 @@ Installed from a kit older than v0.1.12? Your `suite.sh` predates the
 self-refresh — run the install one-liner from todo.law once more; it refreshes
 the kit in place and never touches `.env`, your settings, or your data.
 
-Want a fixed, reproducible version instead of always-latest? Edit
-`TODOLAW_VERSION` in `.env` (e.g. `v0.1.1`), then `./suite.sh update`.
+Which version of the apps do you get? The one this kit was released with: each
+kit release pins the three app images to its own version tag, and a kit refresh
+moves that pin, so kit and apps always move together. To follow the newest
+published images instead, or to stay on one older release, set
+`TODOLAW_VERSION` in `.env` (to `latest`, or to a tag such as `v0.1.13`), then
+`./suite.sh update`. Leave it empty to follow the kit.
 
 ## Backups, and moving to another computer
 
@@ -168,8 +172,9 @@ once; there is deliberately no magic merge.
 ## For the technically inclined: the raw one-liner
 
 `suite.sh` is a friendly wrapper. Under the hood the kit is a single
-`docker-compose.yml` that pulls prebuilt images from GHCR (`latest` by
-default; set `TODOLAW_VERSION` in `.env` to pin one release)
+`docker-compose.yml` that pulls prebuilt images from GHCR (pinned to the kit's
+own version tag by default; set `TODOLAW_VERSION` in `.env` to another tag or
+to `latest`)
 (`ghcr.io/rindogatan/{dpocentral,deal-room,aisentinel}` + their `-migrator`
 images). If you would rather drive Docker yourself:
 
@@ -182,8 +187,9 @@ docker compose up -d      # pulls images, migrates, starts all three
 ```
 
 Ports: DPO Central `8485`, Dealroom `8486`, AI Sentinel `8487`. Data lives in
-named Docker volumes and survives restarts and version bumps. To upgrade, bump
-`TODOLAW_VERSION` in `.env` and `docker compose up -d` again. Everything binds
+named Docker volumes and survives restarts and version bumps. To upgrade, pull
+the newer kit (its compose file carries the newer pin) or set `TODOLAW_VERSION`
+in `.env`, and `docker compose up -d` again. Everything binds
 to `127.0.0.1`. Put a reverse proxy with real auth in front before exposing
 it anywhere.
 

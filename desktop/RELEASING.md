@@ -96,7 +96,8 @@ unsigned build. The button URL is the `MAC_DMG_URL` constant in the site repo
 (`~/NEL/todolaw`; before storefront v3 it sat at the top of
 `src/pages/Firms.tsx` and `src/pages/Deploy.tsx`, so re-check where the `/run`
 page keeps it); a kit tag additionally needs `KIT_URL` in
-`~/NEL/todolaw/public/install.sh`. Pushing main deploys.
+`~/NEL/todolaw/public/install.sh`. Pushing main deploys. The kit's own release
+order (version bump, image retag, tag, installer pin) is in `../RELEASING.md`.
 
 **Checking the deploy landed.** `public/install.sh` is a static file, so
 `curl -sL https://todo.law/install.sh | grep KIT_URL` tells you at once. The

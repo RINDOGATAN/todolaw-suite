@@ -9,7 +9,14 @@
 # The three apps share a network, so DPO Central reaches AI Sentinel by service
 # name (no host.docker.internal) — the cross-app "one system, both regimes" view
 # works out of the box. Data lives in named volumes and survives restarts and
-# version bumps. To upgrade: bump TODOLAW_VERSION in .env, then `up -d`.
+# version bumps.
+#
+# Pinned together (safeguard 7, see RELEASING.md): every app image below falls
+# back to the SAME tag as KIT_VERSION in suite.sh, so a given kit always runs
+# the app images it was released with. Leave TODOLAW_VERSION empty in .env to
+# follow the kit; set it (a tag, or "latest") to override. To upgrade a pinned
+# install: `./suite.sh update` (refreshes the kit, so the pin moves), or bump
+# TODOLAW_VERSION in .env, then `up -d`.
 
 name: todolaw-suite
 
@@ -75,7 +82,7 @@ services:
   # ------------------------------------------------------- migrators (one-shot)
   # Apply the migrations history + first-boot seed, then exit. Safe to re-run.
   dpo-migrator:
-    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/dpocentral-migrator:${TODOLAW_VERSION:-v0.1.13}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -85,7 +92,7 @@ services:
       DATABASE_URL: postgresql://dpocentral:${DPO_DB_PASSWORD}@dpo-db:5432/dpocentral
 
   deal-migrator:
-    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/deal-room-migrator:${TODOLAW_VERSION:-v0.1.13}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -97,7 +104,7 @@ services:
       DATABASE_URL_UNPOOLED: postgresql://dealroom:${DEAL_DB_PASSWORD}@deal-db:5432/dealroom
 
   ais-migrator:
-    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/aisentinel-migrator:${TODOLAW_VERSION:-v0.1.13}
     restart: "no"
     working_dir: /app
     entrypoint: ["/bin/sh", "deploy/sovereign/migrate.sh"]
@@ -110,7 +117,7 @@ services:
 
   # ------------------------------------------------------------------- the apps
   dpocentral:
-    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/dpocentral:${TODOLAW_VERSION:-v0.1.13}
     restart: *restart
     ports: ["127.0.0.1:8485:3001"]
     depends_on:
@@ -149,7 +156,7 @@ services:
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   dealroom:
-    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/deal-room:${TODOLAW_VERSION:-v0.1.13}
     restart: *restart
     ports: ["127.0.0.1:8486:3000"]
     depends_on:
@@ -179,7 +186,7 @@ services:
       SKILL_SIGNING_PUBLIC_KEY: ${SKILL_SIGNING_PUBLIC_KEY:-}
 
   aisentinel:
-    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-latest}
+    image: ghcr.io/rindogatan/aisentinel:${TODOLAW_VERSION:-v0.1.13}
     restart: *restart
     ports: ["127.0.0.1:8487:3003"]
     depends_on:
