@@ -1,5 +1,12 @@
 import { pbkdf2Sync, randomBytes, createCipheriv, createDecipheriv } from 'node:crypto'
-import type { Cipher } from 'node:crypto'
+
+/**
+ * The object `createCipheriv` returns. Taken from the function rather than
+ * imported by name: Node's type definitions renamed the standalone type
+ * (`Cipher` became `Cipheriv`), so naming it directly breaks on a bump of the
+ * types that arrive with Electron.
+ */
+type BackupCipher = ReturnType<typeof createCipheriv>
 
 /**
  * OpenSSL-`enc`-compatible AES-256-CBC encryption for backups, byte-identical to
@@ -36,7 +43,7 @@ export function opensslHeader(salt: Buffer): Buffer {
 export function createBackupCipher(
 	passphrase: string,
 	salt: Buffer = randomBytes(SALT_BYTES)
-): { header: Buffer; cipher: Cipher } {
+): { header: Buffer; cipher: BackupCipher } {
 	const { key, iv } = deriveKeyIv(passphrase, salt)
 	return { header: opensslHeader(salt), cipher: createCipheriv('aes-256-cbc', key, iv) }
 }
